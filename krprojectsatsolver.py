@@ -444,6 +444,7 @@ cnf_formula.extend(example_sudoku_clauses)
 
 
 #Try some sat solving
-SAT_solve(test_clauses, log_level=4)
+sat = SAT_solve(test_clauses, log_level=4)
+print(sat)
 
 #When implementing DPLL let's see if this is a smart representation (var lookup-wise) otherwise will modify
