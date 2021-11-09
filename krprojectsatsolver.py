@@ -493,8 +493,8 @@ def SAT_check_and_backtrack(
                         )
                     )
 
-    if log_level > 2:
-        print("history length: {0}".format(len(history)))
+        if log_level > 2:
+            print("history length: {0}".format(len(history)))
 
         # Length of list might jave changed because of previous action
         if len(var_ass_history) > 0:
@@ -558,7 +558,7 @@ cnf_formula.extend(example_sudoku_clauses)
 
 
 # Try some sat solving
-sat = SAT_solve(cnf_formula, log_level=2)
+sat = SAT_solve(cnf_formula, log_level=1)
 print(sat)
 
 # When implementing DPLL let's see if this is a smart representation (var lookup-wise) otherwise will modify
