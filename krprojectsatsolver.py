@@ -280,7 +280,8 @@ def has_empty_clause(cnf_formula, log_level):
 
 def SAT_simplify(cnf_formula, current_variable_assignment, var_assignment_history, log_level):
   '''Performs a full algorithm simplification step. (i.e. applying units, literals)'''
-  print("\n Starting new simplification step")
+  if log_level > 1:
+    print("\n Starting new simplification step")
   # (TAUT): Remove clauses that are tautologies
   tautologies = get_tautologies(cnf_formula)
   cnf_formula = remove_clauses_from_cnf(cnf_formula, tautologies)
@@ -313,7 +314,8 @@ def SAT_simplify(cnf_formula, current_variable_assignment, var_assignment_histor
   return cnf_formula, nothing_changed
 
 def full_SAT_step(cnf_formula,history, log_level, current_variable_assignment,var_assignment_history):
-  print("\n Starting new SAT step")
+  if log_level > 1:
+    print("\n Starting new SAT step")
   history_copy=copy.deepcopy(history)
   var_ass_history = copy.deepcopy(var_assignment_history)
   #Try to simplify repetivly until this is not possible anymore
@@ -334,7 +336,8 @@ def full_SAT_step(cnf_formula,history, log_level, current_variable_assignment,va
   random_variable, history_copy, var_ass_history, backtracked_cnf_formula = SAT_check_and_backtrack(cnf_formula, history_copy, current_variable_assignment, var_ass_history, log_level)
 
   #Then assign a random variable or backtrack on the previous variable
-  print("\n Starting new variable assignment step")
+  if log_level > 1:
+    print("\n Starting new variable assignment step")
   if random_variable is None:
     random_variable=get_variable_by_heuristic(backtracked_cnf_formula, "random",current_variable_assignment)
   num_removed, num_changed = set_variable_assignment(backtracked_cnf_formula, random_variable)
@@ -345,7 +348,7 @@ def full_SAT_step(cnf_formula,history, log_level, current_variable_assignment,va
     print("\n Set variable {0} to true. Removed {1} clauses from the CNF and changed {2} clauses. CNF length reduced number of clauses to {3} clauses".format(random_variable, num_removed, num_changed, len(cnf_formula)))
   
   #Log variable assignment history for backtracking
-  if log_level > 0:
+  if log_level > -1:
     print("Current variable assignment history: {0}".format(var_ass_history))
   
   if log_level > 2:
@@ -354,7 +357,8 @@ def full_SAT_step(cnf_formula,history, log_level, current_variable_assignment,va
   return backtracked_cnf_formula,  history_copy, var_ass_history
 
 def SAT_check_and_backtrack(cnf_formula, history, current_variable_assignment, var_assignment_history, log_level):
-  print("\n Starting new consistency step")
+  if log_level > 1:
+    print("\n Starting new consistency step")
   history_copy = copy.deepcopy(history)
   #Cannot modify paramter objects in python
   var_ass_history = copy.deepcopy(var_assignment_history)
@@ -380,14 +384,17 @@ def SAT_check_and_backtrack(cnf_formula, history, current_variable_assignment, v
     if len(var_ass_history) > 1:
       if abs(var_ass_history[len(var_ass_history)-1]) - abs(var_ass_history[len(var_ass_history)-2]) == 0:
         #Remove the last P and -p for the next value reassignment
-        print("\n\n Annuling var assignments before: {0}".format(var_ass_history))
+        if log_level > 1:
+          print("\n\n Annuling var assignments before: {0}".format(var_ass_history))
         
         var_ass_history = var_ass_history[:len(var_ass_history)-2]
         history_copy = history_copy[:len(history_copy)-2]
-        print("Annuling var assignments AFTER: {0}".format(var_ass_history))
-        print("History AFTER: {0} \n\n".format(history_copy[len(history_copy)-1]))
+        if log_level > 1:
+          print("Annuling var assignments AFTER: {0}".format(var_ass_history))
+          print("History AFTER: {0} \n\n".format(history_copy[len(history_copy)-1]))
     
-      print("history length: {0}".format(len(history)))
+  if log_level>2:  
+    print("history length: {0}".format(len(history)))
 
     
   #Length of list might jave changed because of previous action
@@ -429,7 +436,7 @@ def SAT_solve(cnf_formula, log_level=0):
 
 '''This cell contains some testing with all the foredefined formulae. '''
 #Test clauses for debugging
-test_clauses = read_cnf_from_dimac(test_problem_2)
+test_clauses = read_cnf_from_dimac(test_problem_3)
 if has_empty_clause(test_clauses, log_level=3):
   print("File already has empty clauses. Will never terminate. Something wrong with file loading")
   sys.exit()
@@ -444,7 +451,7 @@ cnf_formula.extend(example_sudoku_clauses)
 
 
 #Try some sat solving
-sat = SAT_solve(test_clauses, log_level=4)
+sat = SAT_solve(cnf_formula, log_level=1)
 print(sat)
 
 #When implementing DPLL let's see if this is a smart representation (var lookup-wise) otherwise will modify
