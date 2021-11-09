@@ -15,6 +15,7 @@ sudoku_collection_path = "dimac_files/sudokus/"
 test_problem = "dimac_files/test_problem.txt"
 test_problem_2 = "dimac_files/test_problem_2.txt"
 test_problem_3 = "dimac_files/test_problem_3.txt"
+test_problem_4 = "dimac_files/test_problem_4.txt"
 
 sudoku_rules_dimac = open(sudoku_rules_path, "r")
 sudoku_example = open(sudoku_example_path, "r")
