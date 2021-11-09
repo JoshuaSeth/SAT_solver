@@ -4,21 +4,17 @@ import random
 import sys
 import copy
 
-# mounting Google Drive 
-from google.colab import drive
-drive.mount('/content/drive')
-
 # opening files
 #Satisfiable assignment of variables satifies all these rules
-sudoku_rules_path = '/content/drive/MyDrive/sudoku-rules.txt'
+sudoku_rules_path = 'dimac_files/sudoku-rules.txt'
 #Example sudoku setup to test with
-sudoku_example_path = '/content/drive/MyDrive/sudoku-example.txt'
+sudoku_example_path = 'dimac_files/sudoku-example.txt'
 #The full collection of dimac sudoku setups
-sudoku_collection_path = '/content/drive/MyDrive/sudokus/'
+sudoku_collection_path = 'dimac_files/sudokus/'
 #Test problem for debugging
-test_problem = '/content/drive/MyDrive/test_problem.txt'
-test_problem_2 = '/content/drive/MyDrive/test_problem_2.txt'
-test_problem_3 = '/content/drive/MyDrive/test_problem_3.txt'
+test_problem = 'dimac_files/test_problem.txt'
+test_problem_2 = 'dimac_files/test_problem_2.txt'
+test_problem_3 = 'dimac_files/test_problem_3.txt'
 
 sudoku_rules_dimac = open(sudoku_rules_path, "r") 
 sudoku_example = open(sudoku_example_path, "r")
@@ -429,9 +425,11 @@ def SAT_solve(cnf_formula, log_level=0):
 
     cnf_formula, history, var_assignment_history = full_SAT_step(cnf_formula,history, log_level, current_variable_assignment,var_assignment_history)
 
+
+
 '''This cell contains some testing with all the foredefined formulae. '''
 #Test clauses for debugging
-test_clauses = read_cnf_from_dimac(test_problem_3)
+test_clauses = read_cnf_from_dimac(test_problem_2)
 if has_empty_clause(test_clauses, log_level=3):
   print("File already has empty clauses. Will never terminate. Something wrong with file loading")
   sys.exit()
