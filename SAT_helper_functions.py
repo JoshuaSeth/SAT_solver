@@ -145,6 +145,7 @@ def get_variable_by_heuristic(cnf_formula, heuristic, current_variable_assignmen
             variable = get_rand_var(cnf_formula)
             if not variable in current_variable_assignment:
                 return abs(variable)
+
     # If no heuristic was matched it was probably not implemented
     warnings.warn(
         "{0} was not implemented yet or an invalid heuristic. Falling back to random varaible selecion".format(
