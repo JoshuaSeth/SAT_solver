@@ -1,6 +1,7 @@
 """This file provides functions to send the changed variables to and keeps track of a dependency graph. When having a conflict ir returns the conflict clause and the backtracking variable for this conflict clause."""
 import copy
 from SAT_helper_functions import *
+import sys
 
 
 class ClauseLearner:
@@ -40,11 +41,12 @@ class ClauseLearner:
         # Loop through unit clauses
         for unit_clause in unit_clauses_and_indices:
             if unit_clause[0] in self.dependency_graph:
-                warnings.warn(
-                    "Received {0}. However, this should already have been a unit clause and shold already have been set to true.".format(
-                        unit_clause
-                    )
-                )
+                # warnings.warn(
+                #     "Received {0}. However, this should already have been a unit clause and shold already have been set to true.".format(
+                #         unit_clause
+                #     )
+                # )
+                pass
             else:
                 # So p: [-q OR p OR r] from the original formula. SO set the value by the original cluase from the formula
                 self.dependency_graph[unit_clause[1][0]] = self.start_formula[
@@ -63,6 +65,7 @@ class ClauseLearner:
         self, cnf_formula, cnf_index_tracker, history, var_assignment_history
     ):
         """Applies clause learning. If no conflicts returns no backtracked variable and the orignal cnf and cnf_index. If a conflict is found, the conflict is added as a new 'learned' clause to the CNF and the backtracked variable and time in history is returned."""
+        print("Dependency graph: {0}".format(self.dependency_graph))
         # Get the current conflicts
         conflicts = self.get_conflict_clauses()
 
@@ -113,9 +116,7 @@ class ClauseLearner:
             var_assignment_history,
         )
 
-    def get_earliest_conflict_causing_var_index(
-        self, conflicts, var_assignment_history
-    ):
+    def get_earliest_conflict_causing_var_index(self, conflicts, var_assignments):
         """Gets the index in the list of assignments of the varaibles causing the conflicts. Returns the earliest index in the list of assignments"""
         # Convert conflicts to a list of problem variables
         problem_vars = []
@@ -129,15 +130,34 @@ class ClauseLearner:
         # Go through problem vars
         for problem_var in problem_vars:
             assign_index = 0
-            for assignment in var_assignment_history:
-                print(str(assignment) + "    " + str(problem_var))
+            found = False
+            for assignment in var_assignments:
                 # If we assigned the problem var in the assignment here
                 if assignment * -1 == problem_var:
                     # If it is the earliest problem causing var from what we recorded set it
                     if assign_index < lowest_found_var_index:
                         lowest_found_var_index = assign_index
                         lowest_found_var = assignment
+                        found = True
                 assign_index += 1
+            # It was not found in assignmetns this means that this in turn was also a dependency
+            if not found:
+                # Get the conflict for this var
+                clauses_with_var = self.get_clauses_for_var(problem_var)[1:]
+                # Look for it recursively
+                try:
+                    print("trying for var", problem_var)
+                    index, var = self.get_earliest_conflict_causing_var_index(
+                        clauses_with_var, var_assignments
+                    )
+                    if index < lowest_found_var_index:
+                        lowest_found_var_index = index
+                        lowest_found_var = var
+                except Exception as e:
+                    print("PROBLEM VAR", problem_var)
+                    print(e)
+                    sys.exit()
+
         return lowest_found_var_index, lowest_found_var
 
     def add_learned_conflict_clauses(
@@ -205,3 +225,16 @@ class ClauseLearner:
                 ):
                     conflict_clauses.append([variable, clause_1, clause_2])
         return conflict_clauses
+
+    def get_clauses_for_var(self, variable):
+        # Add the 2 clauses to conflict clauses
+        if variable in self.dependency_graph:
+            clause_1 = self.dependency_graph[variable]
+            if variable * -1 in self.dependency_graph:
+                clause_2 = self.dependency_graph[variable * -1]
+                return [variable, clause_1, clause_2]
+        else:
+            if variable * -1 in self.dependency_graph:
+                clause_1 = self.dependency_graph[variable * -1]
+                return [variable, clause_1]
+        return [variable, clause_1]

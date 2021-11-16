@@ -85,7 +85,7 @@ def get_pure_literal_clauses(cnf_formula):
     # Collect all clause of which some literal occurs only pure
     pure_literal_clauses = []
     # Check which terms we already checked (via dict since much faster for 'in' than list)
-    checked_terms = {}
+    checked_terms = []
     # We flatten the cnf (i.e. [[p or q] ^ [-q or r]] => [p, q, -q, r])
     # This decreases literal check-up times by about 30 times
     flattened_cnf = flatten(cnf_formula)
@@ -93,14 +93,14 @@ def get_pure_literal_clauses(cnf_formula):
         # for all terms in the clause
         for term in clause:
             # Check if we didn't check this term already in another cluase
-            if not abs(term) in checked_terms:
+            if not term in checked_terms:
                 # check if we didn't do this clause already by the previous terms
                 if not clause in pure_literal_clauses:
-                    # Since we're here officially checing the term we set it to checked
-                    checked_terms[abs(term)] = True
                     # If it occurs in negated form nowhere else it is literal
                     if not term * -1 in flattened_cnf:
                         pure_literal_clauses.append(clause)
+                        # Since we're here officially checing the term we set it to checked
+                        checked_terms.append(term)
     return pure_literal_clauses, checked_terms
 
 
@@ -143,13 +143,13 @@ def get_cnf_index_tracker(cnf_formula):
     return cnf_index_tracker
 
 
-def get_variable_by_heuristic(cnf_formula, heuristic, current_variable_assignment):
+def get_variable_by_heuristic(cnf_formula, heuristic, var_assignments):
     if heuristic is "random":
         # Try to selct a variable we did not check yet, send it if it was not in assignment
         # Otherwise retry
         while True:
             variable = get_rand_var(cnf_formula)
-            if not variable in current_variable_assignment:
+            if not variable in var_assignments:
                 return abs(variable)
 
     # If no heuristic was matched it was probably not implemented
@@ -160,7 +160,7 @@ def get_variable_by_heuristic(cnf_formula, heuristic, current_variable_assignmen
     )
     while True:
         variable = get_rand_var(cnf_formula)
-        if not variable in current_variable_assignment:
+        if not variable in var_assignments:
             return abs(variable)
 
 
