@@ -234,19 +234,22 @@ class ClauseLearner:
                 assign_index += 1
             # It was not found in assignmetns this means that this in turn was also a dependency
             if not found and lowest_found_var is None:
-                conflicts = self.get_clauses_for_var(problem_var)
-                index, var = self.get_earliest_conflict_causing_var_index(
-                    [conflicts], var_assignments
-                )
-                # print(
-                #     "index and vars after recursive search for ",
-                #     problem_var,
-                #     index,
-                #     var,
-                # )
-                if index < lowest_found_var_index:
-                    lowest_found_var_index = index
-                    lowest_found_var = var
+                try:
+                    conflicts = self.get_clauses_for_var(problem_var)
+                    index, var = self.get_earliest_conflict_causing_var_index(
+                        [conflicts], var_assignments
+                    )
+                    # print(
+                    #     "index and vars after recursive search for ",
+                    #     problem_var,
+                    #     index,
+                    #     var,
+                    # )
+                    if index < lowest_found_var_index:
+                        lowest_found_var_index = index
+                        lowest_found_var = var
+                except Exception as e:
+                    print(e)
 
         # For some reason var is not found in assignments revert to normal backtracking
         if lowest_found_var is None and len(problem_vars) > 0:
