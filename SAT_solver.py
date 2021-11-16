@@ -15,6 +15,7 @@ def SAT_simplify(
     var_assignment_history,
     cnf_index_tracker,
     clause_learner,
+    history,
     log_level,
 ):
     """Performs a full algorithm simplification step. (i.e. applying units, literals)"""
@@ -41,6 +42,16 @@ def SAT_simplify(
 
     # These unit clauses are now going to be set to true in the clause learner with the original clauses as their reasons
     clause_learner.update_dependencies(unit_clauses_and_indices[0])
+    # Apply clause learning (learn conflict clause and backtrack)
+    (
+        backtracked_var,
+        cnf_formula,
+        cnf_index_tracker,
+        history,
+        var_assignment_history,
+    ) = clause_learner.apply_clause_learning(
+        cnf_formula, cnf_index_tracker, history, var_assignment_history
+    )
 
     remove_clauses_from_cnf(cnf_formula, unit_clauses)
     # Change other clauses accordingly with this var from the clauses
@@ -105,6 +116,7 @@ def full_SAT_step(
             var_ass_history,
             cnf_index_tracker,
             clause_learner,
+            history,
             log_level,
         )
 
@@ -199,7 +211,7 @@ def SAT_solve(cnf_formula, log_level=0):
         index += 1
 
     # Start up the clause learner
-    clause_learner = ClauseLearner(cnf_formula, log_level)
+    clause_learner = ClauseLearner(cnf_formula, 4)
 
     # Continuously apply rules sequentially
     while True:

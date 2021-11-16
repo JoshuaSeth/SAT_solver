@@ -30,5 +30,5 @@ cnf_formula.extend(example_sudoku_clauses)
 voorbeeld = read_cnf_from_dimac(test_problem_3)
 
 # Try some sat solving
-sat = SAT_solve(voorbeeld, log_level=2)
+sat = SAT_solve(voorbeeld, log_level=0)
 print(sat)

@@ -51,7 +51,7 @@ class ClauseLearner:
                     unit_clause[0]
                 ]
 
-                if self.log_level > 2:
+                if self.log_level > 3:
                     print("Added {0} to dependency graph".format(unit_clause))
                     print(
                         "Now {0} being set is dependept on the assignments of {1}".format(
@@ -87,6 +87,19 @@ class ClauseLearner:
         var_assignment_history = var_assignment_history[
             : earliest_problem_var_index + 1
         ]
+
+        # LOG
+        if self.log_level > 2:
+            print(
+                "Found {0} conflicts, Learned {1} clauses from this. First of these is {2}. Backtracked to variable {3}. Reset history and assignment to history to index {4}. Length of CNF is now {5}.".format(
+                    len(conflicts),
+                    len(learned_clauses),
+                    learned_clauses[0] if len(learned_clauses) > 0 else "None",
+                    backtracked_var,
+                    earliest_problem_var_index,
+                    len(cnf_formula),
+                )
+            )
 
         # Return the whole modified packet
         return (
@@ -183,6 +196,8 @@ class ClauseLearner:
                 if (
                     not [variable, clause_1, clause_2] in conflict_clauses
                     and not [variable, clause_2, clause_1] in conflict_clauses
+                    and not [variable * -1, clause_2, clause_1] in conflict_clauses
+                    and not [variable * -1, clause_1, clause_2] in conflict_clauses
                 ):
                     conflict_clauses.append([variable, clause_1, clause_2])
         return conflict_clauses
