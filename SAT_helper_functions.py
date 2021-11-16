@@ -21,28 +21,6 @@ def read_cnf_from_dimac(filename):
     return formula
 
 
-def get_clause_dictionary(cnf_formula):
-    """Returns a dictionary where the variables are the keys and the
-    clause indices containing these keys the values.
-    This way all clauses containing a certain variable can be quickly found"""
-    dictionary = {}
-    clause_index = -1
-    # Loop through all clauses in CNF
-    for clause in cnf_formula:
-        clause_index += 1
-        # Loop through all terms in clause
-        for variable in clause:
-            # Remove - if present
-            variable_name = abs(variable)
-            # If term/variable is in dict add this clause index to it's references,
-            if variable_name in dictionary:
-                dictionary[variable_name].append(clause_index)
-            # Else add it to the dict referring to this clause
-            else:
-                dictionary[variable_name] = [clause_index]
-    return dictionary
-
-
 def get_tautologies(cnf_formula):
     """Returns the tautologic clauses (i.e. [p ^ -p]) from the cnf"""
     # Collect tautologies to remove later so we don't modify a list we are looping
@@ -209,20 +187,20 @@ def has_empty_clause(cnf_formula, log_level):
 
 
 def sudoku_to_DIMACS(sudoku):
-    """Prints set of clauses given a sudoku as a string""" # code needs to be cleaned up after it is finished
+    """Prints set of clauses given a sudoku as a string"""  # code needs to be cleaned up after it is finished
     count = 0
 
     for element in sudoku:
         count = count + 1
 
-        if element != '.':
-            row = math.ceil(count/9)
-            column = count - (row - 1)*9
-            #print('element:', element, 'count:', count, 'row:', row, 'column:', column)
+        if element != ".":
+            row = math.ceil(count / 9)
+            column = count - (row - 1) * 9
+            # print('element:', element, 'count:', count, 'row:', row, 'column:', column)
             variable = str(row) + str(column) + str(element)
-            print(variable, '0') # needs to be saved to a file instead of being printed 
+            print(variable, "0")  # needs to be saved to a file instead of being printed
 
-    # output only contains clauses containing numbers for specific sudoku, no constraints 
-    # need to edit: what kind of input needs to be processed? how should output be presented? 
-    # following string can be used as a test sudoku: 
-    teststring = '.94...13..............76..2.8..1.....32.........2...6.....5.4.......8..7..63.4..8'
+    # output only contains clauses containing numbers for specific sudoku, no constraints
+    # need to edit: what kind of input needs to be processed? how should output be presented?
+    # following string can be used as a test sudoku:
+    teststring = ".94...13..............76..2.8..1.....32.........2...6.....5.4.......8..7..63.4..8"
