@@ -4,11 +4,17 @@ performing a single SAT step (simplify, consistency check, assign vars and backt
 Clauses should be in the form of a list of list (an AND of OR's) i.e. [[111, -112], [432,634,423], [-453, -211]]"""
 
 from SAT_helper_functions import *
+from clause_learning import ClauseLearner
 import copy
 
 
 def SAT_simplify(
-    cnf_formula, current_variable_assignment, var_assignment_history, log_level
+    cnf_formula,
+    current_variable_assignment,
+    var_assignment_history,
+    cnf_index_tracker,
+    clause_learner,
+    log_level,
 ):
     """Performs a full algorithm simplification step. (i.e. applying units, literals)"""
     if log_level > 1:
@@ -16,6 +22,8 @@ def SAT_simplify(
     # (TAUT): Remove clauses that are tautologies
     tautologies = get_tautologies(cnf_formula)
     cnf_formula = remove_clauses_from_cnf(cnf_formula, tautologies)
+
+    # LOG
     if log_level > 1:
         print(
             "Removed {0} tautologies from the CNF. CNF length reduced number of clauses to {1} clauses".format(
@@ -25,6 +33,15 @@ def SAT_simplify(
 
     # (UNIT PR): Find unit clauses and set them to true
     unit_clauses, variables_in_unit_clauses = get_unit_clauses(cnf_formula)
+
+    # For clause learning we need to collect the indices of the original clauses
+    # list of [index, [p]]
+    unit_clauses_and_indices = get_unit_clauses_and_indices(cnf_index_tracker)
+    print("\n" + str(unit_clauses_and_indices) + "\n\n")
+
+    # These unit clauses are now going to be set to true in the clause learner with the original clauses as their reasons
+    clause_learner.update_dependencies(unit_clauses_and_indices[0])
+
     remove_clauses_from_cnf(cnf_formula, unit_clauses)
     # Change other clauses accordingly with this var from the clauses
     removed_clauses = 0
@@ -33,8 +50,8 @@ def SAT_simplify(
         num_removed, num_changed = set_variable_assignment(cnf_formula, unit_clause_var)
         removed_clauses += num_removed
         changed_clauses += num_changed
-        # current_variable_assignment[abs(unit_clause_var)] = bool(unit_clause_var/abs(unit_clause_var)+1)
-        # var_assignment_history.append(unit_clause_var)
+
+    # LOG
     if log_level > 1:
         print(
             "Removed {0} unit clauses from the CNF. Removed {1} clauses that became true by setting the unitclause to true. Changed {2} clauses according to the unit clause varaible. CNF length reduced number of clauses to {3} clauses".format(
@@ -54,10 +71,10 @@ def SAT_simplify(
         )
 
     nothing_changed = (
-        removed_clauses is 0
-        and changed_clauses is 0
-        and len(unit_clauses) is 0
-        and len(tautologies) is 0
+        removed_clauses == 0
+        and changed_clauses == 0
+        and len(unit_clauses) == 0
+        and len(tautologies) == 0
     )
     return cnf_formula, nothing_changed
 
@@ -135,7 +152,13 @@ def SAT_check_consistency_and_backtrack(
 
 
 def full_SAT_step(
-    cnf_formula, history, log_level, current_variable_assignment, var_assignment_history
+    cnf_formula,
+    history,
+    log_level,
+    current_variable_assignment,
+    var_assignment_history,
+    cnf_index_tracker,
+    clause_learner,
 ):
     # LOG
     if log_level > 1:
@@ -150,7 +173,12 @@ def full_SAT_step(
     while not simplification_exhausted:
         # Single simplification step
         cnf_formula, simplification_exhausted = SAT_simplify(
-            cnf_formula, current_variable_assignment, var_ass_history, log_level
+            cnf_formula,
+            current_variable_assignment,
+            var_ass_history,
+            cnf_index_tracker,
+            clause_learner,
+            log_level,
         )
 
         # LOG
@@ -234,6 +262,16 @@ def SAT_solve(cnf_formula, log_level=0):
 
     # CNF_index_tracker is used for backtracking to know what caused a unit cluase to be a unit cluase
     cnf_index_tracker = []
+    # Format is: [index, [clause in current form]]
+    index = 0
+    # Save the index for each clause
+    for clause in cnf_formula:
+        # This also works shallowly, which is cool, because changes resulting from a assigning variables should be reflected in the index tracker (not for complete clause removals though!)
+        cnf_index_tracker.append([index, clause])
+        index += 1
+
+    # Start up the clause learner
+    clause_learner = ClauseLearner(cnf_formula, log_level)
 
     # Continuously apply rules sequentially
     while True:
@@ -250,4 +288,6 @@ def SAT_solve(cnf_formula, log_level=0):
             log_level,
             current_variable_assignment,
             var_assignment_history,
+            cnf_index_tracker,
+            clause_learner,
         )

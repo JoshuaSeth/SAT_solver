@@ -4,19 +4,20 @@ from SAT_helper_functions import *
 
 
 class ClauseLearner:
-    def __init__(self, cnf_formula):
+    def __init__(self, cnf_formula, log_level):
         """Set ups the clause learner for use. 1. Remembers original formula. 2. Constructs dictionary from this formula"""
-        self.start_formula = self.set_starting_cnf(cnf_formula)
-        self.dictionary = self.set_clause_dictionary(self.start_formula)
+        self.start_formula = self.copy_starting_cnf(cnf_formula)
+        self.dictionary = self.create_clause_dictionary(self.start_formula)
         self.dependency_graph = {}
+        self.log_level = log_level
 
-    def set_starting_cnf(self, cnf_formula):
+    def copy_starting_cnf(self, cnf_formula):
         """The clause learner needs a copy of the original CNF for dependencies and making a dictionary."""
         # Save copy of the start formula
         start_formula = copy.deepcopy(cnf_formula)
         return start_formula
 
-    def get_clause_dictionary(self, cnf_formula):
+    def create_clause_dictionary(self, cnf_formula):
         """Returns a dictionary where the variables are the keys and the
         clauses containing these keys the values.
         This way all clauses containing a certain variable can be quickly found"""
@@ -34,12 +35,28 @@ class ClauseLearner:
                     dictionary[variable] = [clause]
         return dictionary
 
-    def update_dependency_graph(self, var_assignment, unit_clauses):
+    def update_dependencies(self, unit_clauses_and_indices):
         """Updates the dependency graph by the given unit clauses from the last varaible assignment and the orignal formula."""
         # Loop through unit clauses
-        for unit_clause in unit_clauses:
-            if unit_clause in self.dependency_graph:
-                # This unit clause became a unit clause because all other variables were false in the original clause
-                # So how do we know what the original variables were?
-                # Maybe give each clause an original index? So we can look it up in the original formula
-                return
+
+        for unit_clause in unit_clauses_and_indices:
+            print(unit_clause)
+            if unit_clause[0] in self.dependency_graph:
+                warnings.warn(
+                    "Received {0}. However, this should already have been a unit clause and shold already have been set to true.".format(
+                        unit_clause
+                    )
+                )
+            else:
+                # So p: [-q OR p OR r] from the original formula. SO set the value by the original cluase from the formula
+                print(len(self.start_formula))
+                self.dependency_graph[unit_clause[1][0]] = self.start_formula[
+                    unit_clause[0]
+                ]
+
+                print("Added {0} to dependency graph".format(unit_clause))
+                print(
+                    "Now {0} being set is dependept on the assignments of {1}".format(
+                        unit_clause[1][0], self.dependency_graph[unit_clause[1][0]]
+                    )
+                )

@@ -58,6 +58,21 @@ def get_unit_clauses(cnf_formula):
     return unit_clauses, variables
 
 
+def get_unit_clauses_and_indices(cnf_index_tracker):
+    """Get all the unit clauses together with their indices (i.e.  [index,[p]]) from the cnf formula. These can be set immediately to true or else the formula is unsat"""
+    # collect unit clauses to return
+    unit_clauses_and_indices = []
+    variables = []
+    # Loop through clauses in the formula
+    for clause in cnf_index_tracker:
+        # If there is only 1 term in the clause part it is an unit clause
+        if len(clause[1]) is 1:
+            unit_clauses_and_indices.append(clause)
+            variables.append(clause[1][0])
+    print(unit_clauses_and_indices)
+    return unit_clauses_and_indices, variables
+
+
 def flatten(list_of_lists):
     """Helper function to flatten a list of list to a 1-demnsional list of numbers.
     needed for optimization"""
