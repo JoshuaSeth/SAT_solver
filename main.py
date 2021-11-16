@@ -1,6 +1,5 @@
 """main.py: The main file from which we run our experiments and tests. For example here we import a dimacs and run it through the SAT solver we con import or apply some helper functions on it."""
 
-import sys
 from SAT_solver import SAT_solve
 from SAT_helper_functions import *
 
