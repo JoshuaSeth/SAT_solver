@@ -4,6 +4,7 @@ import warnings
 import numpy as np
 import random
 import math
+import copy
 
 
 def read_cnf_from_dimac(filename):
@@ -163,6 +164,13 @@ def get_variable_by_heuristic(cnf_formula, heuristic, current_variable_assignmen
             return abs(variable)
 
 
+def set_and_track_variable_assignment(cnf_formula, variable, var_assignments, history):
+    """Sets a variable, removes and changes clauses by setting. Registers the setting of this variable in the supplied SAT solver history"""
+    set_variable_assignment(cnf_formula, variable)
+    var_assignments.append(variable)
+    history.append(copy.deepcopy(cnf_formula))
+
+
 def set_variable_assignment(cnf_formula, random_variable):
     """Sets a given variable to true in the formula.
     If given the negated version of the variable it sets the varible to false.
@@ -170,7 +178,8 @@ def set_variable_assignment(cnf_formula, random_variable):
     clauses where this variable was true (i.e. clause is satisfied), and (2) removing
     the variable form the vlauses where it was not satisfied (i.e. this variable
     cannot be true anymore in this clause).
-    returns num removed clauses and num changed clauses"""
+    returns num removed clauses and num changed clauses
+    NOTE: Does not register the setting of this variable to history. Just changes the formula. You may want to use set_and_track_variable_assignment instead."""
     # Keep track of numbers
     num_changed = 0
     num_removed = 0
