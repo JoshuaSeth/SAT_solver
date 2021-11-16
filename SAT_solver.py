@@ -88,16 +88,14 @@ def SAT_check_consistency_and_backtrack(
     # Cannot modify paramter objects in python
     var_ass_history = copy.deepcopy(var_assignment_history)
     # (CONSISTENT & BACKTRACK): check of formula consistent else backtrack
-    # INcosistency can only be present in unit clauses
-    # unit_clauses, variables_in_unit_clauses = get_unit_clauses(cnf_formula)
-    # consistent = is_consistent(unit_clauses)
+
     has_empty_clauses = has_empty_clause(cnf_formula, log_level)
-    # if log_level > 1:
-    #     print(
-    #         "\n Formula is consistent: {0}, has empty clauses: {1} backtracking: {2}".format(
-    #             consistent, has_empty_clauses, not consistent or has_empty_clauses
-    #         )
-    #     )
+    if log_level > 1:
+        print(
+            "\n Has empty clauses: {0} backtracking: {1}".format(
+                has_empty_clauses, has_empty_clauses
+            )
+        )
 
     # If no incosistencies do a normal step
     random_variable = None
