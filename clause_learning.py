@@ -2,6 +2,10 @@
 import copy
 from SAT_helper_functions import *
 import sys
+import matplotlib.pyplot as plt
+import networkx as nx
+import time
+import pylab as p
 
 
 class ClauseLearner:
@@ -11,6 +15,24 @@ class ClauseLearner:
         self.dictionary = self.create_clause_dictionary(self.start_formula)
         self.dependency_graph = {}
         self.log_level = log_level
+        self.dependency_history = []
+
+    def draw_dependency_graph(self):
+        Weights = []
+
+        G = nx.Graph()
+        # each edge is a tuple of the form (node1, node2, {'weight': weight})
+        for key in self.dependency_graph.keys():
+            for variable in self.dependency_graph[key]:
+                G.add_edge(variable, key)
+
+        pos = nx.spring_layout(G)  # positions for all nodes
+
+        # nodes
+        # nx.draw_networkx_nodes(G, pos, node_size=700)
+        nx.draw(G)
+
+        plt.show()
 
     def copy_starting_cnf(self, cnf_formula):
         """The clause learner needs a copy of the original CNF for dependencies and making a dictionary."""
@@ -38,6 +60,7 @@ class ClauseLearner:
 
     def update_dependencies(self, unit_clauses_and_indices):
         """Updates the dependency graph by the given unit clauses from the last varaible assignment and the orignal formula."""
+        self.dependency_history.append(copy.deepcopy(self.dependency_graph))
         # Loop through unit clauses
         for unit_clause in unit_clauses_and_indices:
             if unit_clause[0] in self.dependency_graph:
@@ -72,11 +95,6 @@ class ClauseLearner:
         # Learn clauses from these conflicts
         learned_clauses = self.learn_clauses_from_conflicts(conflicts)
 
-        # Add learned clauses to the relevant formulae
-        cnf_formula, cnf_index_tracker = self.add_learned_conflict_clauses(
-            cnf_formula, cnf_index_tracker, learned_clauses
-        )
-
         # Get index of earliest occuring problem var
         (
             earliest_problem_var_index,
@@ -85,11 +103,22 @@ class ClauseLearner:
             conflicts, var_assignment_history
         )
 
-        # Now backtrack to this variable and backtrack the history and varaible assignment history accordingly
-        history = history[: earliest_problem_var_index + 1]
-        var_assignment_history = var_assignment_history[
-            : earliest_problem_var_index + 1
-        ]
+        print(conflicts)
+        print(earliest_problem_var_index)
+        if len(conflicts) > 0:
+            cnf_formula = history[earliest_problem_var_index]
+
+            # Add learned clauses to the relevant formulae
+            cnf_formula, cnf_index_tracker = self.add_learned_conflict_clauses(
+                cnf_formula, cnf_index_tracker, learned_clauses
+            )
+
+            # Now backtrack to this variable and backtrack the history and varaible assignment history accordingly
+            history = history[:earliest_problem_var_index]
+            var_assignment_history = var_assignment_history[:earliest_problem_var_index]
+
+            # Don't forget to backtrack our own dependency graph also
+            self.dependency_graph = self.dependency_history[earliest_problem_var_index]
 
         # LOG
         if self.log_level > 1 and len(conflicts) > 0:
@@ -107,6 +136,8 @@ class ClauseLearner:
                 )
             )
 
+        self.draw_dependency_graph()
+
         # Return the whole modified packet
         return (
             backtracked_var,
@@ -121,7 +152,13 @@ class ClauseLearner:
         # Convert conflicts to a list of problem variables
         problem_vars = []
         for conflict in conflicts:
-            problem_vars.append(conflict[0])
+            for var in conflict[1]:
+                if var != conflict[0]:
+                    problem_vars.append(var)
+            if len(conflict) > 2:
+                for var in conflict[2]:
+                    if var != conflict[0]:
+                        problem_vars.append(var)
 
         # Get a backtracked variable for these conflicts
         # This is a variable matching to lowest assignment index for all the conflict variables
@@ -143,20 +180,20 @@ class ClauseLearner:
             # It was not found in assignmetns this means that this in turn was also a dependency
             if not found:
                 # Get the conflict for this var
-                clauses_with_var = self.get_clauses_for_var(problem_var)[1:]
+                clauses_with_var = self.get_clauses_for_var(problem_var)
                 # Look for it recursively
-                try:
-                    print("trying for var", problem_var)
-                    index, var = self.get_earliest_conflict_causing_var_index(
-                        clauses_with_var, var_assignments
-                    )
-                    if index < lowest_found_var_index:
-                        lowest_found_var_index = index
-                        lowest_found_var = var
-                except Exception as e:
-                    print("PROBLEM VAR", problem_var)
-                    print(e)
-                    sys.exit()
+                # try:
+                # print("trying for var", problem_var)
+                index, var = self.get_earliest_conflict_causing_var_index(
+                    [clauses_with_var], var_assignments
+                )
+                if index < lowest_found_var_index:
+                    lowest_found_var_index = index
+                    lowest_found_var = var
+                # except Exception as e:
+                # print("PROBLEM VAR", problem_var)
+                # print(e)
+                # sys.exit()
 
         return lowest_found_var_index, lowest_found_var
 
@@ -237,4 +274,4 @@ class ClauseLearner:
             if variable * -1 in self.dependency_graph:
                 clause_1 = self.dependency_graph[variable * -1]
                 return [variable, clause_1]
-        return [variable, clause_1]
+        return [variable, [variable]]

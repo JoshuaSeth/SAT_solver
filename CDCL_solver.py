@@ -87,7 +87,7 @@ class CDCL_Solver:
                 )
             # Set backtracked variavle
             formula, var_assignments, history = set_and_track_variable_assignment(
-                formula, backtracked_var, var_assignments, history
+                formula, backtracked_var * -1, var_assignments, history
             )
 
             if self.log_level > 1:
