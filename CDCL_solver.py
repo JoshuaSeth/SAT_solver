@@ -20,8 +20,6 @@ class CDCL_Solver:
 
         unit_vars_set_true = []
 
-        cnf_index_tracker_history = []
-
         # Start up the clause learner
         clause_learner = ClauseLearner(cnf_formula, 3)
 
@@ -36,8 +34,6 @@ class CDCL_Solver:
             # Does a full SAT step (Backtrack, simplification, var_assignment)
             (
                 cnf_formula,
-                cnf_index_tracker,
-                cnf_index_tracker_history,
                 clause_learner,
                 history,
                 var_assignments,
@@ -46,8 +42,6 @@ class CDCL_Solver:
                 could_simplify,
             ) = self.SAT_step(
                 cnf_formula,
-                cnf_index_tracker,
-                cnf_index_tracker_history,
                 clause_learner,
                 history,
                 var_assignments,
@@ -62,8 +56,6 @@ class CDCL_Solver:
     def SAT_step(
         self,
         formula,
-        cnf_index_tracker,
-        cnf_index_tracker_history,
         clause_learner,
         history,
         var_assignments,
@@ -81,6 +73,8 @@ class CDCL_Solver:
 
         # ------------------------------------------------------------------
         # BACKTRACKING: Check if consistent else backtrack to time in history
+        # Design the index tracker on the fly ao we have a single source of truth
+        cnf_index_tracker = get_cnf_index_tracker(formula)
         unit_indices, vars = get_unit_clauses_and_indices(cnf_index_tracker)
 
         unit_clauses, varss = get_unit_clauses(formula)
@@ -146,8 +140,6 @@ class CDCL_Solver:
                     var_assignments,
                     history,
                     clause_learner,
-                    cnf_index_tracker_history,
-                    cnf_index_tracker,
                 )
                 if self.log_level > 1:
                     print(

@@ -166,19 +166,12 @@ def get_variable_by_heuristic(cnf_formula, heuristic, var_assignments):
 
 
 def set_and_track_variable_assignment(
-    cnf_formula,
-    variable,
-    var_assignments,
-    history,
-    clause_learner,
-    cnf_tracker_history,
-    cnf_index_tracker,
+    cnf_formula, variable, var_assignments, history, clause_learner
 ):
     """Sets a variable, removes and changes clauses by setting. Registers the setting of this variable in the supplied SAT solver history"""
     set_variable_assignment(cnf_formula, variable)
     var_assignments.append(variable)
     history.append(copy.deepcopy(cnf_formula))
-    cnf_tracker_history.append(copy.deepcopy(cnf_index_tracker))
     clause_learner.dependency_history.append(
         copy.deepcopy(clause_learner.dependency_graph)
     )
