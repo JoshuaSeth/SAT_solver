@@ -130,6 +130,18 @@ def get_rand_var(cnf_formula):
     return variable
 
 
+def get_cnf_index_tracker(cnf_formula):
+    cnf_index_tracker = []
+    # Format is: [index, [clause in current form]]
+    index = 0
+    # Save the index for each clause
+    for clause in cnf_formula:
+        # This also works shallowly, which is cool, because changes resulting from a assigning variables should be reflected in the index tracker (not for complete clause removals though!)
+        cnf_index_tracker.append([index, clause])
+        index += 1
+    return cnf_index_tracker
+
+
 def get_variable_by_heuristic(cnf_formula, heuristic, current_variable_assignment):
     if heuristic is "random":
         # Try to selct a variable we did not check yet, send it if it was not in assignment

@@ -212,21 +212,13 @@ def SAT_solve(cnf_formula, log_level=0):
     # Track the assigned variables (i.e. p=true q=flase, r=true, etc.)
     current_variable_assignment = {}
     var_assignment_history = []
-    implicit_assignment_history = []
     # A simple and naive way to keep history
     # A sudoku CNF is at most 22kB so should be alright for smaller problems like these
     # Might want to implemented backtracking data in a more sophisticated manner later
     history = []
 
     # CNF_index_tracker is used for backtracking to know what caused a unit cluase to be a unit cluase
-    cnf_index_tracker = []
-    # Format is: [index, [clause in current form]]
-    index = 0
-    # Save the index for each clause
-    for clause in cnf_formula:
-        # This also works shallowly, which is cool, because changes resulting from a assigning variables should be reflected in the index tracker (not for complete clause removals though!)
-        cnf_index_tracker.append([index, clause])
-        index += 1
+    cnf_index_tracker = get_cnf_index_tracker(cnf_formula)
 
     # Start up the clause learner
     clause_learner = ClauseLearner(cnf_formula, 2)
