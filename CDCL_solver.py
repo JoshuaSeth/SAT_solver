@@ -86,21 +86,18 @@ class CDCL_Solver:
         unit_clauses, varss = get_unit_clauses(formula)
         clause_learner.update_dependencies(unit_indices)  # FOr some
         # Apply clause learning (learn conflict clause and backtrack)
-        print("indices", unit_indices)
+        print("\nindices", unit_indices)
+        print("clauses", unit_clauses)
         print("number of unit clauses, ", len(unit_clauses))
         print("number of unit clause indices ", len(unit_indices))
-
+        print("formula", formula)
         (
             backtracked_var,
             formula,
-            cnf_index_tracker,
-            cnf_index_tracker_history,
             history,
             var_assignments,
         ) = clause_learner.apply_clause_learning(
             formula,
-            cnf_index_tracker,
-            cnf_index_tracker_history,
             history,
             var_assignments,
         )
@@ -121,8 +118,6 @@ class CDCL_Solver:
                 var_assignments,
                 history,
                 clause_learner,
-                cnf_index_tracker_history,
-                cnf_index_tracker,
             )
 
             if self.log_level > 1:
@@ -199,8 +194,6 @@ class CDCL_Solver:
                 var_assignments,
                 history,
                 clause_learner,
-                cnf_index_tracker_history,
-                cnf_index_tracker,
             )
         print("has empty clause after literal", has_empty_clause(formula))
 
@@ -233,8 +226,6 @@ class CDCL_Solver:
 
         return (
             formula,
-            cnf_index_tracker,
-            cnf_index_tracker_history,
             clause_learner,
             history,
             var_assignments,

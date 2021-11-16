@@ -89,8 +89,6 @@ class ClauseLearner:
     def apply_clause_learning(
         self,
         cnf_formula,
-        cnf_index_tracker,
-        cnf_index_tracker_history,
         history,
         var_assignment_history,
     ):
@@ -149,11 +147,9 @@ class ClauseLearner:
             cnf_formula = history[earliest_problem_var_index]
             print("CNF len after: {0}".format(len(cnf_formula)))
 
-            cnf_index_tracker = cnf_index_tracker_history[earliest_problem_var_index]
-
             # Add learned clauses to the relevant formulae
-            cnf_formula, cnf_index_tracker = self.add_learned_conflict_clauses(
-                cnf_formula, cnf_index_tracker, learned_clauses
+            cnf_formula = self.add_learned_conflict_clauses(
+                cnf_formula, learned_clauses
             )
 
             print("Dependency graph before: {0}".format(self.dependency_graph))
@@ -170,17 +166,14 @@ class ClauseLearner:
             self.dependency_history = self.dependency_history[
                 :earliest_problem_var_index
             ]
-            cnf_index_tracker_history[:earliest_problem_var_index]
             print("depdndency history after:{0}".format(len(self.dependency_history)))
 
-        self.draw_dependency_graph()
+        # self.draw_dependency_graph()
 
         # Return the whole modified packet
         return (
             backtracked_var,
             cnf_formula,
-            cnf_index_tracker,
-            cnf_index_tracker_history,
             history,
             var_assignment_history,
         )
@@ -241,20 +234,16 @@ class ClauseLearner:
 
         return lowest_found_var_index, lowest_found_var
 
-    def add_learned_conflict_clauses(
-        self, cnf_formula, cnf_index_tracker, learned_clauses
-    ):
-        """Searches for conflict. Learns a new clause from this conflict and adds this to the original CNF, current CNF and CNF index tracker. Needs to be added to all of these to function. Returns cnf_formula and cnf_index_tracker"""
+    def add_learned_conflict_clauses(self, cnf_formula, learned_clauses):
+        """Searches for conflict. Learns a new clause from this conflict and adds this to the original CNF, current CNF and CNF index tracker. Needs to be added to all of these to function. Returns cnf_formula."""
         # Get learned clauses
 
         for learned_clause in learned_clauses:
             # Shallow
             cnf_formula.append(learned_clause)
-            # Shallow
-            cnf_index_tracker.append([len(self.start_formula), learned_clause])
             # Deep
             self.start_formula.append(copy.deepcopy(learned_clause))
-        return cnf_formula, cnf_index_tracker
+        return cnf_formula
 
     def learn_clauses_from_conflicts(self, conflicts):
         """Returns the combination of variable assignments that has caused a conflict."""
