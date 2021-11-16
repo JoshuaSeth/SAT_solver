@@ -4,7 +4,6 @@ performing a single SAT step (simplify, consistency check, assign vars and backt
 Clauses should be in the form of a list of list (an AND of OR's) i.e. [[111, -112], [432,634,423], [-453, -211]]"""
 
 from SAT_helper_functions import *
-import sys
 import copy
 
 
@@ -63,78 +62,10 @@ def SAT_simplify(
     return cnf_formula, nothing_changed
 
 
-def full_SAT_step(
-    cnf_formula, history, log_level, current_variable_assignment, var_assignment_history
+def SAT_check_consistency_and_backtrack(
+    cnf_formula, history, var_assignment_history, log_level
 ):
-    if log_level > 1:
-        print("\n Starting new SAT step")
-    history_copy = copy.deepcopy(history)
-    var_ass_history = copy.deepcopy(var_assignment_history)
-    # Try to simplify repetivly until this is not possible anymore
-    simplification_exhausted = False
-    while not simplification_exhausted:
-        cnf_formula, simplification_exhausted = SAT_simplify(
-            cnf_formula, current_variable_assignment, var_ass_history, log_level
-        )
-        if log_level > 1 and not simplification_exhausted:
-            print("Succesfully simplified formula. Continuing to simplify.")
-        if log_level > 1 and simplification_exhausted:
-            print("Formula simplified. No more simplification possible.")
-        if log_level > 2:
-            print("new CNF is: {0}".format(cnf_formula))
-
-    if len(cnf_formula) is 0:
-        return cnf_formula, history_copy, var_assignment_history
-
-    # This will be none if there are no incosistencies, it will return a backtracked varaible if there are
-    (
-        random_variable,
-        history_copy,
-        var_ass_history,
-        backtracked_cnf_formula,
-    ) = SAT_check_and_backtrack(
-        cnf_formula,
-        history_copy,
-        current_variable_assignment,
-        var_ass_history,
-        log_level,
-    )
-
-    # Then assign a random variable or backtrack on the previous variable
-    if log_level > 1:
-        print("\n Starting new variable assignment step")
-    if random_variable is None:
-        random_variable = get_variable_by_heuristic(
-            backtracked_cnf_formula, "random", current_variable_assignment
-        )
-    num_removed, num_changed = set_variable_assignment(
-        backtracked_cnf_formula, random_variable
-    )
-    # Set the current variable to true or false based on what we choose
-    current_variable_assignment[abs(random_variable)] = bool(
-        random_variable / abs(random_variable) + 1
-    )
-    var_ass_history.append(random_variable)
-    if log_level > 0:
-        print(
-            "\n Set variable {0} to true. Removed {1} clauses from the CNF and changed {2} clauses. CNF length reduced number of clauses to {3} clauses".format(
-                random_variable, num_removed, num_changed, len(cnf_formula)
-            )
-        )
-
-    # Log variable assignment history for backtracking
-    if log_level > -1:
-        print("Current variable assignment history: {0}".format(var_ass_history))
-
-    if log_level > 2:
-        print("new CNF is: {0}".format(backtracked_cnf_formula))
-
-    return backtracked_cnf_formula, history_copy, var_ass_history
-
-
-def SAT_check_and_backtrack(
-    cnf_formula, history, current_variable_assignment, var_assignment_history, log_level
-):
+    """Checks if the formula is consistent. If not it returns a backtracked varaible. Else it returns nothing."""
     if log_level > 1:
         print("\n Starting new consistency step")
     history_copy = copy.deepcopy(history)
@@ -203,6 +134,92 @@ def SAT_check_and_backtrack(
     return random_variable, history_copy, var_ass_history, backtracked_cnf_formula
 
 
+def full_SAT_step(
+    cnf_formula, history, log_level, current_variable_assignment, var_assignment_history
+):
+    # LOG
+    if log_level > 1:
+        print("\n Starting new SAT step")
+
+    # I thought I was having some shallow dopy issues. THis might not be necessary anymore. Currently the largest time-consumer
+    history_copy = copy.deepcopy(history)
+    var_ass_history = copy.deepcopy(var_assignment_history)
+
+    # Try to simplify repetivly until this is not possible anymore
+    simplification_exhausted = False
+    while not simplification_exhausted:
+        # Single simplification step
+        cnf_formula, simplification_exhausted = SAT_simplify(
+            cnf_formula, current_variable_assignment, var_ass_history, log_level
+        )
+
+        # LOG
+        if log_level > 1 and not simplification_exhausted:
+            print("Succesfully simplified formula. Continuing to simplify.")
+        if log_level > 1 and simplification_exhausted:
+            print("Formula simplified. No more simplification possible.")
+        if log_level > 2:
+            print("new CNF is: {0}".format(cnf_formula))
+
+    # If the formula is empty we are SAT so don't perform any operations anymore
+    if len(cnf_formula) is 0:
+        return cnf_formula, history_copy, var_assignment_history
+
+    # Get these retrun values from checking for consistency and backtracking if needed
+    (
+        backtracked_variable,  # This will be none if there are no incosistencies, it will return a backtracked varaible if there are
+        history_copy,
+        var_ass_history,
+        backtracked_cnf_formula,  # An old version of the CNF, the version it was at the time of the assignment of the backtracked variable
+    ) = SAT_check_consistency_and_backtrack(
+        cnf_formula,
+        history_copy,
+        var_ass_history,
+        log_level,
+    )
+
+    # LOG
+    if log_level > 1:
+        print("\n Starting new variable assignment step")
+
+    # Then assign a random variable or backtrack on the previous variable
+    if backtracked_variable is None:
+        variable_to_change = get_variable_by_heuristic(
+            backtracked_cnf_formula, "random", current_variable_assignment
+        )
+    else:
+        variable_to_change = backtracked_variable
+
+    num_removed, num_changed = set_variable_assignment(
+        backtracked_cnf_formula, variable_to_change
+    )
+
+    # Set the current variable to true or false based on what we choose
+    current_variable_assignment[abs(variable_to_change)] = bool(
+        variable_to_change / abs(variable_to_change) + 1
+    )
+
+    # And add the set variable to the assignment history
+    var_ass_history.append(variable_to_change)
+
+    # LOG
+    if log_level > 0:
+        print(
+            "\n Set variable {0} to true. Removed {1} clauses from the CNF and changed {2} clauses. CNF length reduced number of clauses to {3} clauses".format(
+                variable_to_change, num_removed, num_changed, len(cnf_formula)
+            )
+        )
+
+    # Log variable assignment history for backtracking
+    if log_level > -1:
+        print("Current variable assignment history: {0}".format(var_ass_history))
+
+    if log_level > 2:
+        print("new CNF is: {0}".format(backtracked_cnf_formula))
+
+    return backtracked_cnf_formula, history_copy, var_ass_history
+
+
 def SAT_solve(cnf_formula, log_level=0):
     """SAT solves a formula that is already in CNF. Returns SAT, variable assignment
     if it is satisfiable. Returns UNSAT if no satisfiable assignments exist"""
@@ -214,6 +231,9 @@ def SAT_solve(cnf_formula, log_level=0):
     # A sudoku CNF is at most 22kB so should be alright for smaller problems like these
     # Might want to implemented backtracking data in a more sophisticated manner later
     history = []
+
+    # CNF_index_tracker is used for backtracking to know what caused a unit cluase to be a unit cluase
+    cnf_index_tracker = []
 
     # Continuously apply rules sequentially
     while True:
