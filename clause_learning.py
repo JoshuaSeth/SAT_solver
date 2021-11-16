@@ -59,10 +59,76 @@ class ClauseLearner:
                         )
                     )
 
-    def add_learned_conflict_clauses(self, cnf_formula, cnf_index_tracker):
+    def apply_clause_learning(
+        self, cnf_formula, cnf_index_tracker, history, var_assignment_history
+    ):
+        """Applies clause learning. If no conflicts returns no backtracked variable and the orignal cnf and cnf_index. If a conflict is found, the conflict is added as a new 'learned' clause to the CNF and the backtracked variable and time in history is returned."""
+        # Get the current conflicts
+        conflicts = self.get_conflict_clauses()
+
+        # Learn clauses from these conflicts
+        learned_clauses = self.learn_clauses_from_conflicts(conflicts)
+
+        # Add learned clauses to the relevant formulae
+        cnf_formula, cnf_index_tracker = self.add_learned_conflict_clauses(
+            cnf_formula, cnf_index_tracker, learned_clauses
+        )
+
+        # Get index of earliest occuring problem var
+        (
+            earliest_problem_var_index,
+            backtracked_var,
+        ) = self.get_earliest_conflict_causing_var_index(
+            conflicts, var_assignment_history
+        )
+
+        # Now backtrack to this variable and backtrack the history and varaible assignment history accordingly
+        history = history[: earliest_problem_var_index + 1]
+        var_assignment_history = var_assignment_history[
+            : earliest_problem_var_index + 1
+        ]
+
+        # Return the whole modified packet
+        return (
+            backtracked_var,
+            cnf_formula,
+            cnf_index_tracker,
+            history,
+            var_assignment_history,
+        )
+
+    def get_earliest_conflict_causing_var_index(
+        self, conflicts, var_assignment_history
+    ):
+        """Gets the index in the list of assignments of the varaibles causing the conflicts. Returns the earliest index in the list of assignments"""
+        # Convert conflicts to a list of problem variables
+        problem_vars = []
+        for conflict in conflicts:
+            problem_vars.append(conflict[0])
+
+        # Get a backtracked variable for these conflicts
+        # This is a variable matching to lowest assignment index for all the conflict variables
+        lowest_found_var_index = 999999
+        lowest_found_var = None
+        # Go through problem vars
+        for problem_var in problem_vars:
+            assign_index = 0
+            for assignment in var_assignment_history:
+                # If we assigned the problem var in the assignment here
+                if assignment == problem_var:
+                    # If it is the earliest problem causing var from what we recorded set it
+                    if assign_index < lowest_found_var_index:
+                        lowest_found_var_index = assign_index
+                        lowest_found_var = problem_var
+                assign_index += 1
+        return lowest_found_var_index, lowest_found_var
+
+    def add_learned_conflict_clauses(
+        self, cnf_formula, cnf_index_tracker, learned_clauses
+    ):
         """Searches for conflict. Learns a new clause from this conflict and adds this to the original CNF, current CNF and CNF index tracker. Needs to be added to all of these to function. Returns cnf_formula and cnf_index_tracker"""
         # Get learned clauses
-        learned_clauses = self.learn_clauses_from_conflicts()
+
         for learned_clause in learned_clauses:
             # Shallow
             cnf_formula.append(learned_clause)
@@ -72,10 +138,9 @@ class ClauseLearner:
             self.start_formula.append(copy.deepcopy(learned_clause))
         return cnf_formula, cnf_index_tracker
 
-    def learn_clauses_from_conflicts(self):
+    def learn_clauses_from_conflicts(self, conflicts):
         """Returns the combination of variable assignments that has caused a conflict."""
         learned_clauses = []
-        conflicts = self.get_conflict_clauses()
         for conflict in conflicts:
             # Unpack elements of conflict
             conflict_var = conflict[0]
