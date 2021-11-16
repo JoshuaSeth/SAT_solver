@@ -84,10 +84,6 @@ def SAT_check_consistency_and_backtrack(
     """Checks if the formula is consistent. If not it returns a backtracked varaible. Else it returns nothing."""
     if log_level > 1:
         print("\n Starting new consistency step")
-    history_copy = copy.deepcopy(history)
-    # Cannot modify paramter objects in python
-    var_ass_history = copy.deepcopy(var_assignment_history)
-    # (CONSISTENT & BACKTRACK): check of formula consistent else backtrack
 
     has_empty_clauses = has_empty_clause(cnf_formula, log_level)
     if log_level > 1:
@@ -108,44 +104,48 @@ def SAT_check_consistency_and_backtrack(
 
         # Try to switch around the last assigned variable
         # If bot P and -P don't work backtrack further back
-        if len(var_ass_history) > 1:
+        if len(var_assignment_history) > 1:
             if (
-                abs(var_ass_history[len(var_ass_history) - 1])
-                - abs(var_ass_history[len(var_ass_history) - 2])
+                abs(var_assignment_history[len(var_assignment_history) - 1])
+                - abs(var_assignment_history[len(var_assignment_history) - 2])
                 == 0
             ):
                 if log_level > 1:
                     print(
                         "\n\n Annuling var assignments before: {0}".format(
-                            var_ass_history
+                            var_assignment_history
                         )
                     )
 
                 # Remove the last P and -p for the next value reassignment
-                var_ass_history = var_ass_history[: len(var_ass_history) - 2]
-                history_copy = history_copy[: len(history_copy) - 2]
+                var_assignment_history = var_assignment_history[
+                    : len(var_assignment_history) - 2
+                ]
+                history = history[: len(history) - 2]
                 if log_level > 1:
-                    print("Annuling var assignments AFTER: {0}".format(var_ass_history))
                     print(
-                        "History AFTER: {0} \n\n".format(
-                            history_copy[len(history_copy) - 1]
+                        "Annuling var assignments AFTER: {0}".format(
+                            var_assignment_history
                         )
                     )
+                    print("History AFTER: {0} \n\n".format(history[len(history) - 1]))
 
         if log_level > 2:
             print("history length: {0}".format(len(history)))
 
         # Length of list might jave changed because of previous action
-        if len(var_ass_history) > 0:
+        if len(var_assignment_history) > 0:
             # reload the cnf formula state from before this assignment
-            backtracked_cnf_formula = history_copy[len(history_copy) - 2]
-            random_variable = var_ass_history[len(var_ass_history) - 1] * -1
+            backtracked_cnf_formula = history[len(history) - 2]
+            random_variable = (
+                var_assignment_history[len(var_assignment_history) - 1] * -1
+            )
 
         # If the history is to short (ie. we backtracked to step 1 again, choose a random var)
         if len(var_ass_history) is 0:
             random_variable = None
 
-    return random_variable, history_copy, var_ass_history, backtracked_cnf_formula
+    return random_variable, history, var_ass_history, backtracked_cnf_formula
 
 
 def full_SAT_step(
@@ -161,9 +161,8 @@ def full_SAT_step(
     if log_level > 1:
         print("\n Starting new SAT step")
 
-    # I thought I was having some shallow dopy issues. THis might not be necessary anymore. Currently the largest time-consumer
-    history_copy = copy.deepcopy(history)
-    var_ass_history = copy.deepcopy(var_assignment_history)
+    # Just a name shortening
+    var_ass_history = var_assignment_history
 
     # Try to simplify repetivly until this is not possible anymore
     simplification_exhausted = False
@@ -193,12 +192,12 @@ def full_SAT_step(
     # Get these retrun values from checking for consistency and backtracking if needed
     (
         backtracked_variable,  # This will be none if there are no incosistencies, it will return a backtracked varaible if there are
-        history_copy,
+        history,
         var_ass_history,
         backtracked_cnf_formula,  # An old version of the CNF, the version it was at the time of the assignment of the backtracked variable
     ) = SAT_check_consistency_and_backtrack(
         cnf_formula,
-        history_copy,
+        history,
         var_ass_history,
         log_level,
     )
@@ -242,7 +241,7 @@ def full_SAT_step(
     if log_level > 2:
         print("new CNF is: {0}".format(backtracked_cnf_formula))
 
-    return backtracked_cnf_formula, history_copy, var_ass_history
+    return backtracked_cnf_formula, history, var_ass_history
 
 
 def SAT_solve(cnf_formula, log_level=0):
