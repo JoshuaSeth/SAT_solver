@@ -89,15 +89,18 @@ class ClauseLearner:
         ]
 
         # LOG
-        if self.log_level > 2:
+        if self.log_level > 1 and len(conflicts) > 0:
             print(
-                "Found {0} conflicts, Learned {1} clauses from this. First of these is {2}. Backtracked to variable {3}. Reset history and assignment to history to index {4}. Length of CNF is now {5}.".format(
+                "Found {0} conflicts, namely: {6}, Learned {1} clauses from this. First of these is {2}, originating from {7} and {8}. Backtracked to variable {3}. Reset history and assignment to history to index {4}. Length of CNF is now {5}.".format(
                     len(conflicts),
                     len(learned_clauses),
-                    learned_clauses[0] if len(learned_clauses) > 0 else "None",
+                    learned_clauses[0] if len(learned_clauses) > 0 else "-",
                     backtracked_var,
                     earliest_problem_var_index,
                     len(cnf_formula),
+                    [conflict[0] for conflict in conflicts],
+                    conflicts[0][1] if len(conflicts) > 0 else "-",
+                    conflicts[0][2] if len(conflicts) > 0 else "-",
                 )
             )
 
@@ -127,12 +130,13 @@ class ClauseLearner:
         for problem_var in problem_vars:
             assign_index = 0
             for assignment in var_assignment_history:
+                print(str(assignment) + "    " + str(problem_var))
                 # If we assigned the problem var in the assignment here
-                if assignment == problem_var:
+                if assignment * -1 == problem_var:
                     # If it is the earliest problem causing var from what we recorded set it
                     if assign_index < lowest_found_var_index:
                         lowest_found_var_index = assign_index
-                        lowest_found_var = problem_var
+                        lowest_found_var = assignment
                 assign_index += 1
         return lowest_found_var_index, lowest_found_var
 
