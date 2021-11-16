@@ -40,8 +40,11 @@ def SAT_simplify(
     # list of [index, [p]]
     unit_clauses_and_indices = get_unit_clauses_and_indices(cnf_index_tracker)
 
+    # Always return a backtrack var since qwe can now prematiurely exit simplify
+    backtracked_var = None
+
     # These unit clauses are now going to be set to true in the clause learner with the original clauses as their reasons
-    clause_learner.update_dependencies(unit_clauses_and_indices[0])
+    clause_learner.update_dependencies(unit_clauses_and_indices[0])  # FOr some
     # Apply clause learning (learn conflict clause and backtrack)
     (
         backtracked_var,
@@ -53,12 +56,23 @@ def SAT_simplify(
         cnf_formula, cnf_index_tracker, history, var_assignment_history
     )
 
+    # If there was an incosistency
+    if backtracked_var is not None:
+        print(
+            "Inconsistency found, terminating simplication early and returning backtracked var"
+        )
+        # Set nothing changed to true so it will assign the backtracked variable
+        return backtracked_var, cnf_formula, True
+
+    # Redundant but probably speeds it up a bit
     remove_clauses_from_cnf(cnf_formula, unit_clauses)
     # Change other clauses accordingly with this var from the clauses
     removed_clauses = 0
     changed_clauses = 0
     for unit_clause_var in variables_in_unit_clauses:
         num_removed, num_changed = set_variable_assignment(cnf_formula, unit_clause_var)
+        var_assignment_history.append(unit_clause_var)
+        history.append(copy.deepcopy(cnf_formula))
         removed_clauses += num_removed
         changed_clauses += num_changed
 
@@ -73,7 +87,13 @@ def SAT_simplify(
     # (PURE): Find pure literals and set them to true
     pure_literal_clauses, pure_literals = get_pure_literal_clauses(cnf_formula)
     # One of the variables in these clauses is now true so can be removed
-    remove_clauses_from_cnf(cnf_formula, pure_literal_clauses)
+    index = 0
+    for pure_literal in pure_literals:
+        set_variable_assignment(cnf_formula, pure_literal)
+        var_assignment_history.append(pure_literal)
+        history.append(copy.deepcopy(cnf_formula))
+        index += 1
+
     if log_level > 1:
         print(
             "Removed {0} pure literal clauses from the CNF. CNF length reduced number of clauses to {1} clauses".format(
@@ -87,7 +107,7 @@ def SAT_simplify(
         and len(unit_clauses) == 0
         and len(tautologies) == 0
     )
-    return cnf_formula, nothing_changed
+    return backtracked_var, cnf_formula, nothing_changed
 
 
 def full_SAT_step(
@@ -110,7 +130,7 @@ def full_SAT_step(
     simplification_exhausted = False
     while not simplification_exhausted:
         # Single simplification step
-        cnf_formula, simplification_exhausted = SAT_simplify(
+        backtracked_variable, cnf_formula, simplification_exhausted = SAT_simplify(
             cnf_formula,
             current_variable_assignment,
             var_ass_history,
@@ -129,22 +149,22 @@ def full_SAT_step(
             print("new CNF is: {0}".format(cnf_formula))
 
     # If the formula is empty we are SAT so don't perform any operations anymore
-    if len(cnf_formula) is 0:
+    if len(cnf_formula) == 0:
         return cnf_formula, history, var_assignment_history
 
     # Get these retrun values from checking for consistency and backtracking if needed
-    (
-        backtracked_variable,  # This will be none if there are no incosistencies, it will return a backtracked varaible if there are
-        history,
-        var_ass_history,
-        backtracked_cnf_formula,  # An old version of the CNF, the version it was at the time of the assignment of the backtracked variable
-    ) = SAT_check_consistency_and_backtrack(
-        cnf_formula,
-        history,
-        var_ass_history,
-        clause_learner,
-        log_level,
-    )
+    # (
+    #     backtracked_variable,  # This will be none if there are no incosistencies, it will return a backtracked varaible if there are
+    #     history,
+    #     var_ass_history,
+    #     backtracked_cnf_formula,  # An old version of the CNF, the version it was at the time of the assignment of the backtracked variable
+    # ) = SAT_check_consistency_and_backtrack(
+    #     cnf_formula,
+    #     history,
+    #     var_ass_history,
+    #     clause_learner,
+    #     log_level,
+    # )
 
     # LOG
     if log_level > 1:
@@ -153,14 +173,12 @@ def full_SAT_step(
     # Then assign a random variable or backtrack on the previous variable
     if backtracked_variable is None:
         variable_to_change = get_variable_by_heuristic(
-            backtracked_cnf_formula, "random", current_variable_assignment
+            cnf_formula, "random", current_variable_assignment
         )
     else:
         variable_to_change = backtracked_variable
 
-    num_removed, num_changed = set_variable_assignment(
-        backtracked_cnf_formula, variable_to_change
-    )
+    num_removed, num_changed = set_variable_assignment(cnf_formula, variable_to_change)
 
     # Set the current variable to true or false based on what we choose
     current_variable_assignment[abs(variable_to_change)] = bool(
@@ -183,9 +201,9 @@ def full_SAT_step(
         print("Current variable assignment history: {0}".format(var_ass_history))
 
     if log_level > 2:
-        print("new CNF is: {0}".format(backtracked_cnf_formula))
+        print("new CNF is: {0}".format(cnf_formula))
 
-    return backtracked_cnf_formula, history, var_ass_history
+    return cnf_formula, history, var_ass_history
 
 
 def SAT_solve(cnf_formula, log_level=0):
@@ -211,7 +229,7 @@ def SAT_solve(cnf_formula, log_level=0):
         index += 1
 
     # Start up the clause learner
-    clause_learner = ClauseLearner(cnf_formula, 4)
+    clause_learner = ClauseLearner(cnf_formula, 2)
 
     # Continuously apply rules sequentially
     while True:
