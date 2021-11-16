@@ -142,10 +142,10 @@ def SAT_check_consistency_and_backtrack(
             )
 
         # If the history is to short (ie. we backtracked to step 1 again, choose a random var)
-        if len(var_ass_history) is 0:
+        if len(var_assignment_history) is 0:
             random_variable = None
 
-    return random_variable, history, var_ass_history, backtracked_cnf_formula
+    return random_variable, history, var_assignment_history, backtracked_cnf_formula
 
 
 def full_SAT_step(
@@ -187,7 +187,7 @@ def full_SAT_step(
 
     # If the formula is empty we are SAT so don't perform any operations anymore
     if len(cnf_formula) is 0:
-        return cnf_formula, history_copy, var_assignment_history
+        return cnf_formula, history, var_assignment_history
 
     # Get these retrun values from checking for consistency and backtracking if needed
     (
