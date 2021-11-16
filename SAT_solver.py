@@ -37,7 +37,6 @@ def SAT_simplify(
     # For clause learning we need to collect the indices of the original clauses
     # list of [index, [p]]
     unit_clauses_and_indices = get_unit_clauses_and_indices(cnf_index_tracker)
-    print("\n" + str(unit_clauses_and_indices) + "\n\n")
 
     # These unit clauses are now going to be set to true in the clause learner with the original clauses as their reasons
     clause_learner.update_dependencies(unit_clauses_and_indices[0])
@@ -90,22 +89,22 @@ def SAT_check_consistency_and_backtrack(
     var_ass_history = copy.deepcopy(var_assignment_history)
     # (CONSISTENT & BACKTRACK): check of formula consistent else backtrack
     # INcosistency can only be present in unit clauses
-    unit_clauses, variables_in_unit_clauses = get_unit_clauses(cnf_formula)
-    consistent = is_consistent(unit_clauses)
+    # unit_clauses, variables_in_unit_clauses = get_unit_clauses(cnf_formula)
+    # consistent = is_consistent(unit_clauses)
     has_empty_clauses = has_empty_clause(cnf_formula, log_level)
-    if log_level > 1:
-        print(
-            "\n Formula is consistent: {0}, has empty clauses: {1} backtracking: {2}".format(
-                consistent, has_empty_clauses, not consistent or has_empty_clauses
-            )
-        )
+    # if log_level > 1:
+    #     print(
+    #         "\n Formula is consistent: {0}, has empty clauses: {1} backtracking: {2}".format(
+    #             consistent, has_empty_clauses, not consistent or has_empty_clauses
+    #         )
+    #     )
 
     # If no incosistencies do a normal step
     random_variable = None
     backtracked_cnf_formula = cnf_formula
 
     # Backtracking if necessary
-    if not consistent or has_empty_clauses:
+    if has_empty_clauses:
         if log_level > 0:
             print("\n Backtracking:")
 

@@ -69,7 +69,6 @@ def get_unit_clauses_and_indices(cnf_index_tracker):
         if len(clause[1]) is 1:
             unit_clauses_and_indices.append(clause)
             variables.append(clause[1][0])
-    print(unit_clauses_and_indices)
     return unit_clauses_and_indices, variables
 
 

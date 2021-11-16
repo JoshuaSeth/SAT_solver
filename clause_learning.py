@@ -40,7 +40,6 @@ class ClauseLearner:
         # Loop through unit clauses
 
         for unit_clause in unit_clauses_and_indices:
-            print(unit_clause)
             if unit_clause[0] in self.dependency_graph:
                 warnings.warn(
                     "Received {0}. However, this should already have been a unit clause and shold already have been set to true.".format(
@@ -49,14 +48,14 @@ class ClauseLearner:
                 )
             else:
                 # So p: [-q OR p OR r] from the original formula. SO set the value by the original cluase from the formula
-                print(len(self.start_formula))
                 self.dependency_graph[unit_clause[1][0]] = self.start_formula[
                     unit_clause[0]
                 ]
 
-                print("Added {0} to dependency graph".format(unit_clause))
-                print(
-                    "Now {0} being set is dependept on the assignments of {1}".format(
-                        unit_clause[1][0], self.dependency_graph[unit_clause[1][0]]
+                if self.log_level > 2:
+                    print("Added {0} to dependency graph".format(unit_clause))
+                    print(
+                        "Now {0} being set is dependept on the assignments of {1}".format(
+                            unit_clause[1][0], self.dependency_graph[unit_clause[1][0]]
+                        )
                     )
-                )
