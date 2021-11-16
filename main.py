@@ -1,6 +1,6 @@
 """main.py: The main file from which we run our experiments and tests. For example here we import a dimacs and run it through the SAT solver we con import or apply some helper functions on it."""
 
-from SAT_solver import SAT_solve
+from CDCL_solver import CDCL_Solver
 from SAT_helper_functions import *
 
 # opening files any of these objects can be chosen to run the sat solver on
@@ -30,5 +30,6 @@ cnf_formula.extend(example_sudoku_clauses)
 voorbeeld = read_cnf_from_dimac(test_problem_4)
 
 # Try some sat solving
-sat = SAT_solve(voorbeeld, log_level=0)
+solver = CDCL_Solver(log_level=3)
+sat = solver.SAT_solve(voorbeeld)
 print(sat)

@@ -169,6 +169,7 @@ def set_and_track_variable_assignment(cnf_formula, variable, var_assignments, hi
     set_variable_assignment(cnf_formula, variable)
     var_assignments.append(variable)
     history.append(copy.deepcopy(cnf_formula))
+    return cnf_formula, var_assignments, history
 
 
 def set_variable_assignment(cnf_formula, random_variable):
