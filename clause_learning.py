@@ -38,7 +38,6 @@ class ClauseLearner:
     def update_dependencies(self, unit_clauses_and_indices):
         """Updates the dependency graph by the given unit clauses from the last varaible assignment and the orignal formula."""
         # Loop through unit clauses
-
         for unit_clause in unit_clauses_and_indices:
             if unit_clause[0] in self.dependency_graph:
                 warnings.warn(
@@ -59,3 +58,66 @@ class ClauseLearner:
                             unit_clause[1][0], self.dependency_graph[unit_clause[1][0]]
                         )
                     )
+
+    def add_learned_conflict_clauses(self, cnf_formula, cnf_index_tracker):
+        """Searches for conflict. Learns a new clause from this conflict and adds this to the original CNF, current CNF and CNF index tracker. Needs to be added to all of these to function. Returns cnf_formula and cnf_index_tracker"""
+        # Get learned clauses
+        learned_clauses = self.learn_clauses_from_conflicts()
+        for learned_clause in learned_clauses:
+            # Shallow
+            cnf_formula.append(learned_clause)
+            # Shallow
+            cnf_index_tracker.append([len(self.start_formula), learned_clause])
+            # Deep
+            self.start_formula.append(copy.deepcopy(learned_clause))
+        return cnf_formula, cnf_index_tracker
+
+    def learn_clauses_from_conflicts(self):
+        """Returns the combination of variable assignments that has caused a conflict."""
+        learned_clauses = []
+        conflicts = self.get_conflict_clauses()
+        for conflict in conflicts:
+            # Unpack elements of conflict
+            conflict_var = conflict[0]
+            clause_1 = conflict[1]
+            clause_2 = conflict[2]
+            # Remove the conflict var from the clause (this was effect of conflict not cause)
+            if conflict_var in clause_1:
+                clause_1.remove(conflict_var)
+            if conflict_var * -1 in clause_1:
+                clause_1.remove(conflict_var * -1)
+            if conflict_var in clause_2:
+                clause_2.remove(conflict_var)
+            if conflict_var * -1 in clause_2:
+                clause_2.remove(conflict_var * -1)
+            # Now everything remaining in these clauses was set to false in the assignment history causing the conflict
+            problem_vars = []
+            problem_vars.extend(clause_1)
+            problem_vars.extend(clause_2)
+            addendum_clause = []
+            # Add the inverse of these assignments to the addendum clause
+            # This is the clause that is learned
+            for var in problem_vars:
+                addendum_clause.append(var * -1)
+
+            # We want to add this addendum to the cnf but also to the index tracker so that we can now treat it as just another part of the formula
+            learned_clauses.append(addendum_clause)
+        return learned_clauses
+
+    def get_conflict_clauses(self):
+        """Get the clauses of the conflicts if any. Returns a list of list of conflicting clauses so. [[conflict_var, clause_1, clause_2]]"""
+        conflict_clauses = []
+        # Loop through all keys
+        dict_as_list = self.dependency_graph.keys()
+        for variable in dict_as_list:
+            # If the opposite is also in the dependency graph there is a conflict
+            if variable * -1 in dict_as_list:
+                # Add the 2 clauses to conflict clauses
+                clause_1 = self.dependency_graph[variable]
+                clause_2 = self.dependency_graph[variable * -1]
+                if (
+                    not [variable, clause_1, clause_2] in conflict_clauses
+                    and not [variable, clause_2, clause_1] in conflict_clauses
+                ):
+                    conflict_clauses.append([variable, clause_1, clause_2])
+        return conflict_clauses
