@@ -49,9 +49,7 @@ class CDCL_Solver:
                 could_simplify,
             )
 
-            print("Dep graph coming out of sat step", dep_graph)
             clause_learner.dependency_graph = copy.deepcopy(dep_graph)
-            print("Dep graph set on clause learner", clause_learner.dependency_graph)
 
     def SAT_step(
         self,
@@ -66,11 +64,6 @@ class CDCL_Solver:
         if self.log_level > 2:
             print("Another SAT step")
 
-        print(
-            "At start of step dep grahp at clause learner is",
-            clause_learner.dependency_graph,
-        )
-
         # ------------------------------------------------------------------
         # BACKTRACKING: Check if consistent else backtrack to time in history
         # Design the index tracker on the fly ao we have a single source of truth
@@ -80,11 +73,7 @@ class CDCL_Solver:
         unit_clauses, varss = get_unit_clauses(formula)
         clause_learner.update_dependencies(unit_indices)  # FOr some
         # Apply clause learning (learn conflict clause and backtrack)
-        print("\nindices", unit_indices)
-        print("clauses", unit_clauses)
-        print("number of unit clauses, ", len(unit_clauses))
-        print("number of unit clause indices ", len(unit_indices))
-        print("formula", formula)
+
         (
             backtracked_var,
             formula,
@@ -113,6 +102,9 @@ class CDCL_Solver:
                 history,
                 clause_learner,
             )
+
+            # For future code
+            backtracked_var = None
 
             if self.log_level > 1:
                 print(
@@ -157,16 +149,47 @@ class CDCL_Solver:
         # tautologies = get_tautologies(formula)
         # formula = remove_clauses_from_cnf(formula, tautologies)
 
-        print("Dependency graph before simplifciation", clause_learner.dependency_graph)
-
+        old_cnf = copy.deepcopy(formula)
         # (UNIT PR): Find unit clauses and set them to true
         unit_clauses, variables_in_unit_clauses = get_unit_clauses(formula)
         # Change other clauses accordingly with this var from the clauses
         remove_clauses_from_cnf(formula, unit_clauses)
         for unit_clause_var in variables_in_unit_clauses:
             # We do not register the setting of the unit clauses since it was necessary hence not set_and_track
-            x, y = set_variable_assignment(formula, unit_clause_var)
-        print("has empty clauses after unit", has_empty_clause(formula))
+            set_and_track_variable_assignment(
+                formula,
+                unit_clause_var,
+                var_assignments,
+                history,
+                clause_learner,
+            )
+            # REMOVING UNIT CLAUSES CAN GIVE EMPTY VARS WHEN REMOVING MULTIPLE UNTRUE UNIT CLAUSES AT ONCE
+            unit_indices, vars = get_unit_clauses_and_indices(cnf_index_tracker)
+            clause_learner.update_dependencies(unit_indices)  # FOr some
+            # Apply clause learning (learn conflict clause and backtrack)
+
+            (
+                backtracked_var,
+                formula,
+                history,
+                var_assignments,
+            ) = clause_learner.apply_clause_learning(
+                formula,
+                history,
+                var_assignments,
+            )
+            # break the unit clause setting if an conflict erupted
+            if backtracked_var is not None:
+                break
+
+        empty = has_empty_clause(formula)
+        print("unit", empty)
+
+        if empty:
+            ind = index_empty_clause(formula)
+            print(ind)
+            print(old_cnf[ind])
+            print(formula[ind])
         if self.log_level > 1 and len(unit_clauses) > 0:
             print(
                 "Variable assignments after unit clause assignment: {0}".format(
@@ -174,27 +197,28 @@ class CDCL_Solver:
                 )
             )
 
-            print("depndency after unit clauses:", clause_learner.dependency_graph)
-
-        # (PURE): Find pure literals and set them to true
-        pure_literal_clauses, pure_literals = get_pure_literal_clauses(formula)
-        # One of the variables in these clauses is now true so can be removed
-        for pure_literal in pure_literals:
-            formula, var_assignments, history = set_and_track_variable_assignment(
-                formula,
-                pure_literal,
-                var_assignments,
-                history,
-                clause_learner,
-            )
-        print("has empty clause after literal", has_empty_clause(formula))
-
-        if self.log_level > 1 and len(pure_literals) > 0:
-            print(
-                "Variable assignments after literal assignment: {0}".format(
-                    var_assignments
+        pure_literal_clauses = []
+        if backtracked_var is None:
+            # (PURE): Find pure literals and set them to true
+            pure_literal_clauses, pure_literals = get_pure_literal_clauses(formula)
+            # One of the variables in these clauses is now true so can be removed
+            for pure_literal in pure_literals:
+                formula, var_assignments, history = set_and_track_variable_assignment(
+                    formula,
+                    pure_literal,
+                    var_assignments,
+                    history,
+                    clause_learner,
                 )
-            )
+
+            print("has empty clause after literal", has_empty_clause(formula))
+
+            if self.log_level > 1 and len(pure_literals) > 0:
+                print(
+                    "Variable assignments after literal assignment: {0}".format(
+                        var_assignments
+                    )
+                )
 
         could_simplify_further = (
             len(unit_clauses) != 0
@@ -210,10 +234,6 @@ class CDCL_Solver:
                     len(unit_clauses),
                     len(pure_literal_clauses),
                 )
-            )
-
-            print(
-                "Dependency graph after simplifciation", clause_learner.dependency_graph
             )
 
         return (

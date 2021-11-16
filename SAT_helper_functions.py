@@ -67,7 +67,7 @@ def get_unit_clauses_and_indices(cnf_index_tracker):
     # Loop through clauses in the formula
     for clause in cnf_index_tracker:
         # If there is only 1 term in the clause part it is an unit clause
-        if len(clause[1]) is 1:
+        if len(clause[1]) is 1 or all(element == clause[0] for element in clause):
             print(clause)
             unit_clauses_and_indices.append(clause)
             variables.append(clause[1][0])
@@ -226,6 +226,18 @@ def has_empty_clause(cnf_formula):
             #     print("Found an empty clause: {0}.".format(clause))
             return True
     return False
+
+
+def index_empty_clause(cnf_formula):
+    """Returns whether the cnf has some empty clause"""
+    index = 0
+    for clause in cnf_formula:
+        if len(clause) is 0:
+            # if log_level > 2:
+            #     print("Found an empty clause: {0}.".format(clause))
+            return index
+        index += 1
+    return -1
 
 
 def sudoku_to_DIMACS(sudoku):

@@ -120,7 +120,7 @@ class ClauseLearner:
 
         if self.log_level > 1 and len(conflicts) > 0:
             print(
-                "\n\nFound {0} conflicts, namely: {6}, Learned {1} clauses from this. First of these is {2}, originating from {7} and {8}. Backtracked to variable {3}. Reset history and assignment to history to index {4}. Length of CNF is now {5}.".format(
+                "\n\nFound {0} conflicts, namely: {6}, Learned {1} clauses from this. First of these is {2}, originating from {7} and {8}. Backtracked to variable {3}. Reset history and assignment to history to index {4}. Length of CNF is now {5}. CNF is {9}".format(
                     len(conflicts),
                     len(learned_clauses),
                     learned_clauses[0] if len(learned_clauses) > 0 else "-",
@@ -130,6 +130,7 @@ class ClauseLearner:
                     [conflict[0] for conflict in conflicts],
                     conflicts[0][1] if len(conflicts) > 0 else "-",
                     conflicts[0][2] if len(conflicts) > 0 else "-",
+                    cnf_formula,
                 )
             )
 
@@ -143,30 +144,13 @@ class ClauseLearner:
         if len(conflicts) > 0:
             print("index " + str(earliest_problem_var_index))
 
-            print("CNF len before: {0}".format(len(cnf_formula)))
-            cnf_formula = history[earliest_problem_var_index]
-            print("CNF len after: {0}".format(len(cnf_formula)))
-
-            # Add learned clauses to the relevant formulae
-            cnf_formula = self.add_learned_conflict_clauses(
-                cnf_formula, learned_clauses
+            cnf_formula, history, var_assignment_history = self.backtrack(
+                cnf_formula,
+                history,
+                var_assignment_history,
+                learned_clauses,
+                earliest_problem_var_index,
             )
-
-            print("Dependency graph before: {0}".format(self.dependency_graph))
-            print("len before", len(self.dependency_graph))
-            # Don't forget to backtrack our own dependency graph also
-            self.dependency_graph = self.dependency_history[earliest_problem_var_index]
-            print("len after", len(self.dependency_graph))
-            print("Dependency graph after: {0}".format(self.dependency_graph))
-
-            # Now backtrack to this variable and backtrack the history and varaible assignment history accordingly
-            history = history[:earliest_problem_var_index]
-            var_assignment_history = var_assignment_history[:earliest_problem_var_index]
-            print("depdndency history before:{0}".format(len(self.dependency_history)))
-            self.dependency_history = self.dependency_history[
-                :earliest_problem_var_index
-            ]
-            print("depdndency history after:{0}".format(len(self.dependency_history)))
 
         # self.draw_dependency_graph()
 
@@ -177,6 +161,37 @@ class ClauseLearner:
             history,
             var_assignment_history,
         )
+
+    def backtrack(
+        self,
+        cnf_formula,
+        history,
+        var_assignment_history,
+        learned_clauses,
+        earliest_problem_var_index,
+    ):
+        # Add learned clauses to the relevant formulae
+
+        print("CNF len before: {0}".format(len(cnf_formula)))
+        cnf_formula = history[earliest_problem_var_index]
+        print("CNF len after: {0}".format(len(cnf_formula)))
+
+        cnf_formula.extend(learned_clauses)
+
+        print("Dependency graph before: {0}".format(self.dependency_graph))
+        print("len before", len(self.dependency_graph))
+        # Don't forget to backtrack our own dependency graph also
+        self.dependency_graph = self.dependency_history[earliest_problem_var_index]
+        print("len after", len(self.dependency_graph))
+        print("Dependency graph after: {0}".format(self.dependency_graph))
+
+        # Now backtrack to this variable and backtrack the history and varaible assignment history accordingly
+        history = history[:earliest_problem_var_index]
+        var_assignment_history = var_assignment_history[:earliest_problem_var_index]
+        print("depdndency history before:{0}".format(len(self.dependency_history)))
+        self.dependency_history = self.dependency_history[:earliest_problem_var_index]
+        print("depdndency history after:{0}".format(len(self.dependency_history)))
+        return cnf_formula, history, var_assignment_history
 
     def get_earliest_conflict_causing_var_index(self, conflicts, var_assignments):
         """Gets the index in the list of assignments of the varaibles causing the conflicts. Returns the earliest index in the list of assignments"""
@@ -217,7 +232,7 @@ class ClauseLearner:
                         found = True
                 assign_index += 1
             # It was not found in assignmetns this means that this in turn was also a dependency
-            if not found:
+            if not found and lowest_found_var is None:
                 conflicts = self.get_clauses_for_var(problem_var)
                 index, var = self.get_earliest_conflict_causing_var_index(
                     [conflicts], var_assignments
@@ -234,7 +249,10 @@ class ClauseLearner:
 
         return lowest_found_var_index, lowest_found_var
 
-    def add_learned_conflict_clauses(self, cnf_formula, learned_clauses):
+    # [67, 2, 8, 3, 59, 70, 93, 100, 121, 79, 92, 35, 19, 95, 42, 102, 32, 135, 5]
+    # [-78, 44, -83, 21, 129, -26]
+    # {-105: [125, -97, -26], -27: [49, -23, 127], -112: [39, 25, 141], 37: [96, 34, -63], -39: [102, 50, -25], 98: [-83, 108, 147], 128: [-10, 112, 54], -58: [108, 69, -14], -94: [49, -23, 127], -99: [148, -122, 96], -114: [-56, -111, 140], -138: [24, -25, -90], -111: [21, 147, -69], -96: [65, 120, -70], 55: [34, -135, -139], -68: [78, -44, 83], -50: [-86, 148, 65], -13: [92, -65, 27], 4: [124, -117, -11], -90: [72, -104, 89], -136: [76, -53, 87], -146: [-146, 77, 94], -61: [-97, -13, 83], -122: [148, -13, -84], 68: [-21, -129, 26]}
+    def get_learned_conflict_clauses(self, cnf_formula, learned_clauses):
         """Searches for conflict. Learns a new clause from this conflict and adds this to the original CNF, current CNF and CNF index tracker. Needs to be added to all of these to function. Returns cnf_formula."""
         # Get learned clauses
 
