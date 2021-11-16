@@ -50,10 +50,15 @@ def SAT_simplify(
         backtracked_var,
         cnf_formula,
         cnf_index_tracker,
+        cnf_index_tracker_history,
         history,
         var_assignment_history,
     ) = clause_learner.apply_clause_learning(
-        cnf_formula, cnf_index_tracker, history, var_assignment_history
+        cnf_formula,
+        cnf_index_tracker,
+        cnf_index_tracker_history,
+        history,
+        var_assignment_history,
     )
 
     # If there was an incosistency

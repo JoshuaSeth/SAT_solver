@@ -68,6 +68,7 @@ def get_unit_clauses_and_indices(cnf_index_tracker):
     for clause in cnf_index_tracker:
         # If there is only 1 term in the clause part it is an unit clause
         if len(clause[1]) is 1:
+            print(clause)
             unit_clauses_and_indices.append(clause)
             variables.append(clause[1][0])
     return unit_clauses_and_indices, variables
@@ -164,11 +165,23 @@ def get_variable_by_heuristic(cnf_formula, heuristic, var_assignments):
             return abs(variable)
 
 
-def set_and_track_variable_assignment(cnf_formula, variable, var_assignments, history):
+def set_and_track_variable_assignment(
+    cnf_formula,
+    variable,
+    var_assignments,
+    history,
+    clause_learner,
+    cnf_tracker_history,
+    cnf_index_tracker,
+):
     """Sets a variable, removes and changes clauses by setting. Registers the setting of this variable in the supplied SAT solver history"""
     set_variable_assignment(cnf_formula, variable)
     var_assignments.append(variable)
     history.append(copy.deepcopy(cnf_formula))
+    cnf_tracker_history.append(copy.deepcopy(cnf_index_tracker))
+    clause_learner.dependency_history.append(
+        copy.deepcopy(clause_learner.dependency_graph)
+    )
     return cnf_formula, var_assignments, history
 
 
@@ -212,12 +225,12 @@ def is_consistent(unit_clauses):
     return True
 
 
-def has_empty_clause(cnf_formula, log_level):
+def has_empty_clause(cnf_formula):
     """Returns whether the cnf has some empty clause"""
     for clause in cnf_formula:
         if len(clause) is 0:
-            if log_level > 2:
-                print("Found an empty clause: {0}.".format(clause))
+            # if log_level > 2:
+            #     print("Found an empty clause: {0}.".format(clause))
             return True
     return False
 
