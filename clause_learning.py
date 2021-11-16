@@ -16,6 +16,7 @@ class ClauseLearner:
         self.dependency_graph = {}
         self.log_level = log_level
         self.dependency_history = []
+        plt.ion()
 
     def draw_dependency_graph(self):
         Weights = []
@@ -247,6 +248,10 @@ class ClauseLearner:
                     lowest_found_var_index = index
                     lowest_found_var = var
 
+        # For some reason var is not found in assignments revert to normal backtracking
+        if lowest_found_var is None and len(problem_vars) > 0:
+            lowest_found_var = problem_vars[0]
+            lowest_found_var_index = len(var_assignments) - 2
         return lowest_found_var_index, lowest_found_var
 
     # [67, 2, 8, 3, 59, 70, 93, 100, 121, 79, 92, 35, 19, 95, 42, 102, 32, 135, 5]
