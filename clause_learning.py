@@ -16,7 +16,6 @@ class ClauseLearner:
         self.dependency_graph = {}
         self.log_level = log_level
         self.dependency_history = []
-        plt.ion()
 
     def draw_dependency_graph(self):
         Weights = []
@@ -24,9 +23,10 @@ class ClauseLearner:
         G = nx.DiGraph()
         # each edge is a tuple of the form (node1, node2, {'weight': weight})
         for key in self.dependency_graph.keys():
-            for variable in self.dependency_graph[key]:
-                if not variable == key:
-                    G.add_edge(variable, key)
+            for clause in self.dependency_graph[key]:
+                for variable in clause:
+                    if not variable == key:
+                        G.add_edge(variable, key)
 
         pos = nx.spring_layout(G)  # positions for all nodes
 
@@ -64,15 +64,16 @@ class ClauseLearner:
         """Updates the dependency graph by the given unit clauses from the last varaible assignment and the orignal formula."""
         # Loop through unit clauses
         for unit_clause in unit_clauses_and_indices:
-            # [0] is the index of the unit clause, [1] is the index clause
+            # If the unit already has dependencies add these dependenvies 
             if unit_clause[1][0] in self.dependency_graph:
-                self.dependency_graph[unit_clause[1][0]].extend(self.start_formula[unit_clause[0]]) 
+                #Add the clause from the original starting formula
+                self.dependency_graph[unit_clause[1][0]].append(self.start_formula[unit_clause[0]])
             else:
                 # So p: [-q OR p OR r] from the original formula. SO set the value by the original cluase from the formula
                 # If it wasnt a unit clause right from the start
                 # if len(self.start_formula[unit_clause[0]]) > 1:
                 clause_var = unit_clause[1][0]
-                self.dependency_graph[clause_var] = self.start_formula[unit_clause[0]]
+                self.dependency_graph[clause_var] = [self.start_formula[unit_clause[0]]]
 
                 if self.log_level > 3:
                     print("Added {0} to dependency graph".format(unit_clause))
@@ -110,8 +111,8 @@ class ClauseLearner:
             (
                 earliest_problem_var_index,
                 backtracked_var,
-            ) = self.get_earliest_conflict_causing_var_index(
-                conflicts, var_assignment_history
+            ) = self.get_lowest_index_conflict_var(
+                learned_clauses, var_assignment_history, 0
             )
 
         if self.log_level > 1 and len(conflicts) > 0:
@@ -184,26 +185,17 @@ class ClauseLearner:
             len(self.dependency_history)))
         return cnf_formula, history, var_assignment_history
 
-    def get_earliest_conflict_causing_var_index(self, conflicts, var_assignments):
+    def get_lowest_index_conflict_var(self, learned_clauses, var_assignments, depth, precedent_vars = None, previous_var=None):
         """Gets the index in the list of assignments of the varaibles causing the conflicts. Returns the earliest index in the list of assignments"""
-        # Convert conflicts to a list of problem variables
-        problem_vars = []
-        for conflict in conflicts:
-            for var in conflict[1]:
-                if (
-                    var != conflict[0]
-                    and var != conflict[0] * -1
-                    and len(conflict[1]) > 1
-                ):
-                    problem_vars.append(var)
-            if len(conflict) > 2:
-                for var in conflict[2]:
-                    if (
-                        var != conflict[0]
-                        and var != conflict[0] * -1
-                        and len(conflict[2]) > 1
-                    ):
-                        problem_vars.append(var)
+        if precedent_vars is None:
+            # Convert conflicts to a list of problem variables
+            problem_vars = []
+            #The learned clauses are why we need to backtrack to a certain point to satisfy these
+            for learned_clause in learned_clauses:
+                for var in learned_clause:
+                    problem_vars.append(var*-1)
+        else: problem_vars = precedent_vars
+
 
         # Get a backtracked variable for these conflicts
         # This is a variable matching to lowest assignment index for all the conflict variables
@@ -223,24 +215,23 @@ class ClauseLearner:
                         found = True
                 assign_index += 1
             # It was not found in assignmetns this means that this in turn was also a dependency
-            if not found and lowest_found_var is None:
+
+            if not found and problem_var != previous_var and depth < 3 and lowest_found_var_index > 0: #If it is equal to the previous var we have this situation 19: [20, 19, 33]
                 try:
-                    conflicts = self.get_clauses_for_var(problem_var)
-                    index, var = self.get_earliest_conflict_causing_var_index(
-                        [conflicts], var_assignments
+                    vars_it_depends_on = self.get_dependence_variables_for_var(problem_var)
+                    index, var = self.get_lowest_index_conflict_var(
+                        None, var_assignments, depth+1, precedent_vars=vars_it_depends_on,previous_var=problem_var
                     )
                     if index < lowest_found_var_index:
                         lowest_found_var_index = index
                         lowest_found_var = var
+                    print(
+                        "Var not found in variable assignments: {0}. Found as item in dependency graph: {1}, index:{2}, final var: {3}".format(problem_var, problem_var in self.dependency_graph, index, var))
                 except Exception as e:
                     print(e)
-                print(
-                    "Var not found in variable assignments: {0}. Found as item in dependency graph: {1}, index:{2}, final var: {3}".format(problem_var, problem_var in self.dependency_graph, index, var))
+
 
         # For some reason var is not found in assignments revert to normal backtracking
-        if lowest_found_var is None and len(problem_vars) > 0:
-            lowest_found_var = problem_vars[0]
-            lowest_found_var_index = len(var_assignments) - 2
         return lowest_found_var_index, lowest_found_var
 
     def get_learned_conflict_clauses(self, cnf_formula, learned_clauses):
@@ -257,63 +248,55 @@ class ClauseLearner:
     def learn_clauses_from_conflicts(self, conflicts):
         """Returns the combination of variable assignments that has caused a conflict."""
         learned_clauses = []
+        #Conflicts is a list of [var, [pos_clauses], [neg_clauses]]
         for conflict in conflicts:
             # Unpack elements of conflict
             conflict_var = conflict[0]
-            clause_1 = conflict[1]
-            clause_2 = conflict[2]
-            # Remove the conflict var from the clause (this was effect of conflict not cause)
-            if conflict_var in clause_1:
-                clause_1.remove(conflict_var)
-            if conflict_var * -1 in clause_1:
-                clause_1.remove(conflict_var * -1)
-            if conflict_var in clause_2:
-                clause_2.remove(conflict_var)
-            if conflict_var * -1 in clause_2:
-                clause_2.remove(conflict_var * -1)
-            # Now everything remaining in these clauses was set to false in the assignment history causing the conflict
-            problem_vars = []
-            problem_vars.extend(clause_1)
-            problem_vars.extend(clause_2)
-            addendum_clause = []
-            # Add the inverse of these assignments to the addendum clause
-            # This is the clause that is learned
-            for var in problem_vars:
-                addendum_clause.append(var * -1)
+            pos_clauses = conflict[1]
+            neg_clauses = conflict[2]
+            
+            learned_clauses_for_this_conflict = []
 
-            # We want to add this addendum to the cnf but also to the index tracker so that we can now treat it as just another part of the formula
-            learned_clauses.append(addendum_clause)
+            #Get a cartesian product of the positive and negative competing clauses (none of them is matching)
+            for pos_clause in pos_clauses:
+                #And the negatives
+                for neg_clause in neg_clauses:
+                    learned_clause_cartesian_vars = []
+                    for var in pos_clause:
+                        learned_clause_cartesian_vars.append(var*-1)
+                    for var in neg_clause:
+                        learned_clause_cartesian_vars.append(var*-1)
+                    learned_clauses_for_this_conflict.append(learned_clause_cartesian_vars)
+           
+
+            learned_clauses.extend(learned_clauses_for_this_conflict)
+        #Learned clauses shoulld be of form [[learned var combination], [learned_var_combination]]
         return learned_clauses
 
     def get_conflict_clauses(self):
-        """Get the clauses of the conflicts if any. Returns a list of list of conflicting clauses so. [[conflict_var, clause_1, clause_2]]"""
+        """Get the clauses of the conflicts if any. Returns a list of list of conflicting clauses so. [[conflict_var, pos_clauses, neg_clauses]]"""
         conflict_clauses = []
         # Loop through all keys
         dict_as_list = self.dependency_graph.keys()
         for variable in dict_as_list:
-            # If the opposite is also in the dependency graph there is a conflict
-            if variable * -1 in dict_as_list:
-                # Add the 2 clauses to conflict clauses
-                clause_1 = self.dependency_graph[variable]
-                clause_2 = self.dependency_graph[variable * -1]
-                if (
-                    not [variable, clause_1, clause_2] in conflict_clauses
-                    and not [variable, clause_2, clause_1] in conflict_clauses
-                    and not [variable * -1, clause_2, clause_1] in conflict_clauses
-                    and not [variable * -1, clause_1, clause_2] in conflict_clauses
-                ):
-                    conflict_clauses.append([variable, clause_1, clause_2])
+            #Dont add everything twice
+            if variable == abs(variable):
+                conflicting_clauses_for_var = [variable, [], []]
+                # If the opposite is also in the dependency graph there is a conflict
+                if variable * -1 in dict_as_list:
+                    # Add ALL the clauses to conflict clauses
+                    for clause in self.dependency_graph[variable]:
+                        conflicting_clauses_for_var[1].append(clause)
+                    for clause in self.dependency_graph[variable*-1]:
+                        conflicting_clauses_for_var[2].append(clause)
+                    conflict_clauses.append(conflicting_clauses_for_var)
         return conflict_clauses
 
-    def get_clauses_for_var(self, variable):
-        # Add the 2 clauses to conflict clauses
-        if variable in self.dependency_graph:
-            clause_1 = self.dependency_graph[variable]
-            if variable * -1 in self.dependency_graph:
-                clause_2 = self.dependency_graph[variable * -1]
-                return [variable, clause_1, clause_2]
-        else:
-            if variable * -1 in self.dependency_graph:
-                clause_1 = self.dependency_graph[variable * -1]
-                return [variable, clause_1]
-        return [variable, [variable]]
+
+    def get_dependence_variables_for_var(self, variable):
+        precedent_vars = []
+        for clause in self.dependency_graph[variable]:
+            for var in clause:
+                precedent_vars.append(var)
+        return precedent_vars
+
