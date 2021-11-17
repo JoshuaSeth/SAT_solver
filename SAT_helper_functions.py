@@ -143,6 +143,20 @@ def get_cnf_index_tracker(cnf_formula):
         index += 1
     return cnf_index_tracker
 
+def get_jw_counted_terms(cnf_formula):
+    count_literals = {}
+    for clauses in cnf_formula:
+        for terms in clauses:
+            abs(terms)
+            if terms in count_literals:
+                count_literals[terms] = 2 ** -len(clauses)
+            else:
+                count_literals[terms] = 2 ** -len(clauses)
+    return count_literals
+
+def jw_var_picker(cnf_formula):
+    counts = get_jw_counted_terms(cnf_formula)
+    return max(counts, key = counts.get)
 
 def get_variable_by_heuristic(cnf_formula, heuristic, var_assignments):
     if heuristic is "random":
