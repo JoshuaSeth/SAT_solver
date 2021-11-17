@@ -6,7 +6,7 @@ Clauses should be in the form of a list of list (an AND of OR's) i.e. [[111, -11
 from SAT_helper_functions import *
 import sys
 import copy
-
+import datetime
 
 def SAT_simplify(
     cnf_formula, current_variable_assignment, var_assignment_history, log_level
@@ -206,6 +206,7 @@ def SAT_check_and_backtrack(
 def SAT_solve(cnf_formula, log_level=0):
     """SAT solves a formula that is already in CNF. Returns SAT, variable assignment
     if it is satisfiable. Returns UNSAT if no satisfiable assignments exist"""
+    start_time = datetime.datetime.now()
     # Track the assigned variables (i.e. p=true q=flase, r=true, etc.)
     current_variable_assignment = {}
     var_assignment_history = []
@@ -219,7 +220,8 @@ def SAT_solve(cnf_formula, log_level=0):
     while True:
         # (SAT): If formula is empty it is satisfied
         if len(cnf_formula) is 0:
-            return "SAT"
+            delta_time = (datetime.datetime.now() - start_time)  # check and save time after the code is ran minus time before the code is ran
+            return "SAT", delta_time
 
         # Save current cnf formula to history
         history.append(copy.deepcopy(cnf_formula))
