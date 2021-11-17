@@ -26,6 +26,7 @@ sudokus_and_rules_collection =[(sudokus_4x4_cnf, sudoku_rules_4x4_cnf), (sudokus
 #So the results will be in the form [[x datapoints], [x datapoints], [x datapoints], [x datapoints], etc.]
 results = {}
 
+#RUNNING EXPERIMENTS
 # Run though sudoku collections along with their riles
 for sudoku_collection, rules in sudokus_and_rules_collection:
     #Test against the 2 heuristic
@@ -49,6 +50,7 @@ for sudoku_collection, rules in sudokus_and_rules_collection:
     #Save to results under appropriate name so we cna find back alter
     results[python_var_name_as_string + "_" + heuristic] = times_for_sudokus
 
+#T-TESTS
 #Since we now have a collection with results we might as well do the t-tests immediately
 # Note that you can compare 6 x 5 values (compare each result against the others)
 for key, result_times in results:
