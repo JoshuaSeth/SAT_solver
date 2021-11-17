@@ -66,12 +66,7 @@ class ClauseLearner:
         for unit_clause in unit_clauses_and_indices:
             # [0] is the index of the unit clause, [1] is the index clause
             if unit_clause[1][0] in self.dependency_graph:
-                # warnings.warn(
-                #     "Received {0}. However, this should already have been a unit clause and shold already have been set to true.".format(
-                #         unit_clause
-                #     )
-                # )
-                pass
+                self.dependency_graph[unit_clause[1][0]].extend(self.start_formula[unit_clause[0]]) 
             else:
                 # So p: [-q OR p OR r] from the original formula. SO set the value by the original cluase from the formula
                 # If it wasnt a unit clause right from the start
@@ -135,13 +130,6 @@ class ClauseLearner:
                 )
             )
 
-        if self.log_level > 0:
-            print(
-                "history length: {0}, dependencies length: {1}, should be equal".format(
-                    len(history), len(self.dependency_history)
-                )
-            )
-
         if len(conflicts) > 0:
             print("index " + str(earliest_problem_var_index))
 
@@ -189,9 +177,11 @@ class ClauseLearner:
         # Now backtrack to this variable and backtrack the history and varaible assignment history accordingly
         history = history[:earliest_problem_var_index]
         var_assignment_history = var_assignment_history[:earliest_problem_var_index]
-        print("depdndency history before:{0}".format(len(self.dependency_history)))
+        print("depdndency history before:{0}".format(
+            len(self.dependency_history)))
         self.dependency_history = self.dependency_history[:earliest_problem_var_index]
-        print("depdndency history after:{0}".format(len(self.dependency_history)))
+        print("depdndency history after:{0}".format(
+            len(self.dependency_history)))
         return cnf_formula, history, var_assignment_history
 
     def get_earliest_conflict_causing_var_index(self, conflicts, var_assignments):
@@ -239,17 +229,13 @@ class ClauseLearner:
                     index, var = self.get_earliest_conflict_causing_var_index(
                         [conflicts], var_assignments
                     )
-                    # print(
-                    #     "index and vars after recursive search for ",
-                    #     problem_var,
-                    #     index,
-                    #     var,
-                    # )
                     if index < lowest_found_var_index:
                         lowest_found_var_index = index
                         lowest_found_var = var
                 except Exception as e:
                     print(e)
+                print(
+                    "Var not found in variable assignments: {0}. Found as item in dependency graph: {1}, index:{2}, final var: {3}".format(problem_var, problem_var in self.dependency_graph, index, var))
 
         # For some reason var is not found in assignments revert to normal backtracking
         if lowest_found_var is None and len(problem_vars) > 0:
@@ -257,9 +243,6 @@ class ClauseLearner:
             lowest_found_var_index = len(var_assignments) - 2
         return lowest_found_var_index, lowest_found_var
 
-    # [67, 2, 8, 3, 59, 70, 93, 100, 121, 79, 92, 35, 19, 95, 42, 102, 32, 135, 5]
-    # [-78, 44, -83, 21, 129, -26]
-    # {-105: [125, -97, -26], -27: [49, -23, 127], -112: [39, 25, 141], 37: [96, 34, -63], -39: [102, 50, -25], 98: [-83, 108, 147], 128: [-10, 112, 54], -58: [108, 69, -14], -94: [49, -23, 127], -99: [148, -122, 96], -114: [-56, -111, 140], -138: [24, -25, -90], -111: [21, 147, -69], -96: [65, 120, -70], 55: [34, -135, -139], -68: [78, -44, 83], -50: [-86, 148, 65], -13: [92, -65, 27], 4: [124, -117, -11], -90: [72, -104, 89], -136: [76, -53, 87], -146: [-146, 77, 94], -61: [-97, -13, 83], -122: [148, -13, -84], 68: [-21, -129, 26]}
     def get_learned_conflict_clauses(self, cnf_formula, learned_clauses):
         """Searches for conflict. Learns a new clause from this conflict and adds this to the original CNF, current CNF and CNF index tracker. Needs to be added to all of these to function. Returns cnf_formula."""
         # Get learned clauses

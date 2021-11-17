@@ -61,8 +61,6 @@ class CDCL_Solver:
         could_simplify_further,
     ):
         """Performs a full algorithm SAT step."""
-        if self.log_level > 2:
-            print("Another SAT step")
 
         # ------------------------------------------------------------------
         # BACKTRACKING: Check if consistent else backtrack to time in history
@@ -85,14 +83,16 @@ class CDCL_Solver:
             var_assignments,
         )
         print(
-            "has empty clause after applying clause learning", has_empty_clause(formula)
+            "has empty clause after applying clause learning", has_empty_clause(
+                formula)
         )
 
         # If we backtracked and got a var from this
         if backtracked_var is not None:
             if self.log_level > 1:
                 print(
-                    "Variable assignments after backtrack: {0}".format(var_assignments)
+                    "Variable assignments after backtrack: {0}".format(
+                        var_assignments)
                 )
             # Set backtracked variavle
             formula, var_assignments, history = set_and_track_variable_assignment(
@@ -140,7 +140,8 @@ class CDCL_Solver:
                         )
                     )
                 print(
-                    "has empty clauses after heuristic var", has_empty_clause(formula)
+                    "has empty clauses after heuristic var", has_empty_clause(
+                        formula)
                 )
 
         # ------------------------------------------------------------------
@@ -164,7 +165,8 @@ class CDCL_Solver:
                 clause_learner,
             )
             # REMOVING UNIT CLAUSES CAN GIVE EMPTY VARS WHEN REMOVING MULTIPLE UNTRUE UNIT CLAUSES AT ONCE
-            unit_indices, vars = get_unit_clauses_and_indices(cnf_index_tracker)
+            unit_indices, vars = get_unit_clauses_and_indices(
+                cnf_index_tracker)
             clause_learner.update_dependencies(unit_indices)  # FOr some
             # Apply clause learning (learn conflict clause and backtrack)
 
@@ -200,7 +202,8 @@ class CDCL_Solver:
         pure_literal_clauses = []
         if backtracked_var is None:
             # (PURE): Find pure literals and set them to true
-            pure_literal_clauses, pure_literals = get_pure_literal_clauses(formula)
+            pure_literal_clauses, pure_literals = get_pure_literal_clauses(
+                formula)
             # One of the variables in these clauses is now true so can be removed
             for pure_literal in pure_literals:
                 formula, var_assignments, history = set_and_track_variable_assignment(
