@@ -28,7 +28,7 @@ example_sudoku_clauses = read_cnf_from_dimac(sudoku_example_path)
 # Merge the sudoku clauses with the game rules
 cnf_formula.extend(example_sudoku_clauses)
 
-voorbeeld = read_cnf_from_dimac(test_problem_4)
+voorbeeld = read_cnf_from_dimac(test_problem_3)
 
 # Try some sat solving
 sat = SAT_solve(voorbeeld, log_level=0)
