@@ -185,7 +185,7 @@ class ClauseLearner:
             len(self.dependency_history)))
         return cnf_formula, history, var_assignment_history
 
-    def get_lowest_index_conflict_var(self, learned_clauses, var_assignments, depth, precedent_vars = None, previous_var=None):
+    def get_lowest_index_conflict_var(self, learned_clauses, var_assignments, depth, precedent_vars = None, previous_vars=[]):
         """Gets the index in the list of assignments of the varaibles causing the conflicts. Returns the earliest index in the list of assignments"""
         if precedent_vars is None:
             # Convert conflicts to a list of problem variables
@@ -203,24 +203,33 @@ class ClauseLearner:
         lowest_found_var = None
         # Go through problem vars
         for problem_var in problem_vars:
+            print("\n\nASSIGNMETNS:", var_assignments, "'\nlooking for var", problem_var)
+
             assign_index = 0
             found = False
             for assignment in var_assignments:
                 # If we assigned the problem var in the assignment here
                 if assignment * -1 == problem_var:
+                    found = True
                     # If it is the earliest problem causing var from what we recorded set it
                     if assign_index < lowest_found_var_index:
                         lowest_found_var_index = assign_index
                         lowest_found_var = assignment
-                        found = True
                 assign_index += 1
             # It was not found in assignmetns this means that this in turn was also a dependency
 
-            if not found and problem_var != previous_var and depth < 3 and lowest_found_var_index > 0: #If it is equal to the previous var we have this situation 19: [20, 19, 33]
+            
+            print("found", found, problem_var, "index should be", assign_index, " is ", lowest_found_var_index)
+
+            if not found and problem_var not in previous_vars and depth < 16 and lowest_found_var_index > 0: #If it is equal to the previous var we have this situation 19: [20, 19, 33]
                 try:
+                    copy_prev = []
+                    copy_prev.extend(previous_vars)
+                    copy_prev.append(problem_var)
+                    print("These vars were already looked for",previous_vars, copy_prev)
                     vars_it_depends_on = self.get_dependence_variables_for_var(problem_var)
                     index, var = self.get_lowest_index_conflict_var(
-                        None, var_assignments, depth+1, precedent_vars=vars_it_depends_on,previous_var=problem_var
+                        None, var_assignments, depth+1, precedent_vars=vars_it_depends_on,previous_vars=copy_prev
                     )
                     if index < lowest_found_var_index:
                         lowest_found_var_index = index
