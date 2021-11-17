@@ -45,12 +45,11 @@ def SAT_simplify(
         )
 
     # (PURE): Find pure literals and set them to true
+    #ONLY APPEARS POSITIVE SO NO CLAUSE MODIFICATION NECESSARY
     pure_literal_clauses, pure_literals = get_pure_literal_clauses(cnf_formula)
     # One of the variables in these clauses is now true so can be removed
     remove_clauses_from_cnf(cnf_formula, pure_literal_clauses)
-    # for literal in pure_literals.keys():
-    #     set_variable_assignment(cnf_formula, literal)
-    #     var_assignment_history.append(literal)
+   
     #Mark
     if log_level > 1:
         print(
