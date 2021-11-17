@@ -199,7 +199,7 @@ def is_consistent(unit_clauses):
 
 
 def has_empty_clause(cnf_formula, log_level):
-    """Returns whether the cnf has some empty clause"""
+    """Returns whether the cnf has some empty clause)"""
     for clause in cnf_formula:
         if len(clause) is 0:
             if log_level > 2:
@@ -209,20 +209,20 @@ def has_empty_clause(cnf_formula, log_level):
 
 
 def sudoku_to_DIMACS(sudoku):
-    """Prints set of clauses given a sudoku as a string""" # code needs to be cleaned up after it is finished
+    """Prints set of clauses given a sudoku as a string"""  # code needs to be cleaned up after it is finished
     count = 0
 
     for element in sudoku:
         count = count + 1
 
-        if element != '.':
-            row = math.ceil(count/9)
-            column = count - (row - 1)*9
-            #print('element:', element, 'count:', count, 'row:', row, 'column:', column)
+        if element != ".":
+            row = math.ceil(count / 9)
+            column = count - (row - 1) * 9
+            # print('element:', element, 'count:', count, 'row:', row, 'column:', column)
             variable = str(row) + str(column) + str(element)
-            print(variable, '0') # needs to be saved to a file instead of being printed 
+            print(variable, "0")  # needs to be saved to a file instead of being printed
 
-    # output only contains clauses containing numbers for specific sudoku, no constraints 
-    # need to edit: what kind of input needs to be processed? how should output be presented? 
-    # following string can be used as a test sudoku: 
-    teststring = '.94...13..............76..2.8..1.....32.........2...6.....5.4.......8..7..63.4..8'
+    # output only contains clauses containing numbers for specific sudoku, no constraints
+    # need to edit: what kind of input needs to be processed? how should output be presented?
+    # following string can be used as a test sudoku:
+    teststring = ".94...13..............76..2.8..1.....32.........2...6.....5.4.......8..7..63.4..8"
