@@ -114,6 +114,9 @@ class ClauseLearner:
             ) = self.get_lowest_index_conflict_var(
                 learned_clauses, var_assignment_history, 0
             )
+            # if earliest_problem_var_index == 999999:
+            #     earliest_problem_var_index=0
+            #     backtracked_var=var_assignment_history[0]
 
         if self.log_level > 1 and len(conflicts) > 0:
             print(
