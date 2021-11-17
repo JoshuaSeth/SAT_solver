@@ -146,6 +146,9 @@ def get_variable_by_heuristic(cnf_formula, heuristic, current_variable_assignmen
             variable = get_rand_var(cnf_formula)
             if not variable in current_variable_assignment:
                 return abs(variable)
+    if heuristic is "cdcvi": #Of hoe je dat ook schrijft
+        pass #Jouw heuristic hier...
+
 
     # If no heuristic was matched it was probably not implemented
     warnings.warn(
