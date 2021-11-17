@@ -9,7 +9,7 @@ import copy
 import datetime
 
 def SAT_simplify(
-    cnf_formula, current_variable_assignment, var_assignment_history, log_level
+    cnf_formula, current_variable_assignment, var_assignment_history, log_level, unit_assignments
 ):
     """Performs a full algorithm simplification step. (i.e. applying units, literals)"""
     if log_level > 1:
@@ -32,6 +32,7 @@ def SAT_simplify(
     changed_clauses = 0
     for unit_clause_var in variables_in_unit_clauses:
         num_removed, num_changed = set_variable_assignment(cnf_formula, unit_clause_var)
+        unit_assignments.append(unit_clause_var)
         removed_clauses += num_removed
         changed_clauses += num_changed
         # current_variable_assignment[abs(unit_clause_var)] = bool(unit_clause_var/abs(unit_clause_var)+1)
@@ -47,6 +48,10 @@ def SAT_simplify(
     pure_literal_clauses, pure_literals = get_pure_literal_clauses(cnf_formula)
     # One of the variables in these clauses is now true so can be removed
     remove_clauses_from_cnf(cnf_formula, pure_literal_clauses)
+    # for literal in pure_literals.keys():
+    #     set_variable_assignment(cnf_formula, literal)
+    #     var_assignment_history.append(literal)
+    #Mark
     if log_level > 1:
         print(
             "Removed {0} pure literal clauses from the CNF. CNF length reduced number of clauses to {1} clauses".format(
@@ -60,11 +65,11 @@ def SAT_simplify(
         and len(unit_clauses) is 0
         and len(tautologies) is 0
     )
-    return cnf_formula, nothing_changed
+    return cnf_formula, nothing_changed, unit_assignments
 
 
 def full_SAT_step(
-    cnf_formula, history, log_level, current_variable_assignment, var_assignment_history
+    cnf_formula, history, log_level, current_variable_assignment, var_assignment_history, unit_assignments,unit_assignments_history
 ):
     if log_level > 1:
         print("\n Starting new SAT step")
@@ -73,8 +78,8 @@ def full_SAT_step(
     # Try to simplify repetivly until this is not possible anymore
     simplification_exhausted = False
     while not simplification_exhausted:
-        cnf_formula, simplification_exhausted = SAT_simplify(
-            cnf_formula, current_variable_assignment, var_ass_history, log_level
+        cnf_formula, simplification_exhausted, unit_assignments = SAT_simplify(
+            cnf_formula, current_variable_assignment, var_ass_history, log_level, unit_assignments
         )
         if log_level > 1 and not simplification_exhausted:
             print("Succesfully simplified formula. Continuing to simplify.")
@@ -84,20 +89,23 @@ def full_SAT_step(
             print("new CNF is: {0}".format(cnf_formula))
 
     if len(cnf_formula) is 0:
-        return cnf_formula, history_copy, var_assignment_history
+        return cnf_formula, history_copy, var_assignment_history, unit_assignments
 
+    backtracked_cnf_formula=None
     # This will be none if there are no incosistencies, it will return a backtracked varaible if there are
     (
         random_variable,
         history_copy,
         var_ass_history,
         backtracked_cnf_formula,
+        unit_assignments
     ) = SAT_check_and_backtrack(
         cnf_formula,
         history_copy,
         current_variable_assignment,
         var_ass_history,
         log_level,
+        unit_assignments_history, unit_assignments
     )
 
     # Then assign a random variable or backtrack on the previous variable
@@ -129,11 +137,12 @@ def full_SAT_step(
     if log_level > 2:
         print("new CNF is: {0}".format(backtracked_cnf_formula))
 
-    return backtracked_cnf_formula, history_copy, var_ass_history
+    print( len(backtracked_cnf_formula), len(history_copy), len(var_ass_history), len(unit_assignments))
+    return backtracked_cnf_formula, history_copy, var_ass_history, unit_assignments
 
 
 def SAT_check_and_backtrack(
-    cnf_formula, history, current_variable_assignment, var_assignment_history, log_level
+    cnf_formula, history, current_variable_assignment, var_assignment_history, log_level, unit_assignment_history, unit_assignments
 ):
     if log_level > 1:
         print("\n Starting new consistency step")
@@ -179,6 +188,8 @@ def SAT_check_and_backtrack(
                 # Remove the last P and -p for the next value reassignment
                 var_ass_history = var_ass_history[: len(var_ass_history) - 2]
                 history_copy = history_copy[: len(history_copy) - 2]
+                unit_assignment_history = unit_assignment_history[:len(unit_assignment_history) - 2]
+
                 if log_level > 1:
                     print("Annuling var assignments AFTER: {0}".format(var_ass_history))
                     print(
@@ -194,13 +205,14 @@ def SAT_check_and_backtrack(
         if len(var_ass_history) > 0:
             # reload the cnf formula state from before this assignment
             backtracked_cnf_formula = history_copy[len(history_copy) - 2]
+            unit_assignments = unit_assignment_history[len(unit_assignment_history) - 2]
             random_variable = var_ass_history[len(var_ass_history) - 1] * -1
 
         # If the history is to short (ie. we backtracked to step 1 again, choose a random var)
         if len(var_ass_history) is 0:
             random_variable = None
 
-    return random_variable, history_copy, var_ass_history, backtracked_cnf_formula
+    return random_variable, history_copy, var_ass_history, backtracked_cnf_formula, unit_assignments
 
 
 def SAT_solve(cnf_formula, log_level=0, heuristic="random"):
@@ -209,27 +221,33 @@ def SAT_solve(cnf_formula, log_level=0, heuristic="random"):
     start_time = datetime.datetime.now()
     # Track the assigned variables (i.e. p=true q=flase, r=true, etc.)
     current_variable_assignment = {}
+    unit_assignments = []
     var_assignment_history = []
-    implicit_assignment_history = []
+    unit_assignments_history = []
     # A simple and naive way to keep history
     # A sudoku CNF is at most 22kB so should be alright for smaller problems like these
     # Might want to implemented backtracking data in a more sophisticated manner later
     history = []
+    
 
     # Continuously apply rules sequentially
     while True:
         # (SAT): If formula is empty it is satisfied
         if len(cnf_formula) is 0:
+            #Merge unit assignments and normal assignments
+            unit_assignments.extend(var_assignment_history)
             delta_time = (datetime.datetime.now() - start_time)  # check and save time after the code is ran minus time before the code is ran
-            return "SAT", delta_time
+            return "SAT", delta_time, unit_assignments
 
         # Save current cnf formula to history
         history.append(copy.deepcopy(cnf_formula))
+        unit_assignments_history.append(copy.deepcopy(unit_assignments))
 
-        cnf_formula, history, var_assignment_history = full_SAT_step(
+        cnf_formula, history, var_assignment_history, unit_assignments = full_SAT_step(
             cnf_formula,
             history,
             log_level,
             current_variable_assignment,
             var_assignment_history,
+            unit_assignments, unit_assignments_history
         )

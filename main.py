@@ -33,9 +33,11 @@ voorbeeld = read_cnf_from_dimac(test_problem_4)
 
 start_time = datetime.datetime.now()  # record time before program is executed
 # Try some sat solving
-sat, time = SAT_solve(cnf_formula, log_level=1)
+sat, time, assignments = SAT_solve(cnf_formula, log_level=1)
 print(sat)
 
+#Print as nicely formatted sudoku
+print_assignments_as_sudoku(assignments)
 # Reading multiple sudoku.txt files. Assumes we name our files 'sudoku_*.txt' where * = a number for each individual sudoku.
 # Also assumes 'sudoku_*.txt' are located in a folder named 'cnf_sudokus'
 """

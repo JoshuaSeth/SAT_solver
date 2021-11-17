@@ -4,7 +4,7 @@ import warnings
 import numpy as np
 import random
 import math
-
+import pandas as pd
 
 def read_cnf_from_dimac(filename):
     """Reads dimacs form a filename to a cnf formula in the form of
@@ -206,6 +206,24 @@ def has_empty_clause(cnf_formula, log_level):
                 print("Found an empty clause: {0}.".format(clause))
             return True
     return False
+
+def print_assignments_as_sudoku(assignments):
+    #Only keep positives
+    assignments = [item for item in assignments if item >= 0]
+    #Sort from low to high
+    assignments = sorted(assignments)
+    #print them left to right
+    grid = []
+    for i in range(9):
+        grid.append([0]*9)
+    for item in assignments:
+        index_x = int(str(item)[0])-1
+        index_y=int(str(item)[1])-1
+        value = int(str(item)[2])
+        grid[index_x][index_y]= value
+    df = pd.DataFrame.from_records(grid)
+    print("\nFilled in sudoku")
+    print(df.to_string(index=False, header=False))
 
 
 def sudoku_to_DIMACS(sudoku):
