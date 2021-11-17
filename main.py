@@ -36,6 +36,9 @@ start_time = datetime.datetime.now()  # record time before program is executed
 sat, time, assignments = SAT_solve(cnf_formula, log_level=1)
 print(sat)
 
+#Print original sudoku to check
+print_assignments_as_sudoku(flatten(example_sudoku_clauses))
+
 #Print as nicely formatted sudoku
 print_assignments_as_sudoku(assignments)
 # Reading multiple sudoku.txt files. Assumes we name our files 'sudoku_*.txt' where * = a number for each individual sudoku.
