@@ -226,3 +226,63 @@ def sudoku_to_DIMACS(sudoku):
     # need to edit: what kind of input needs to be processed? how should output be presented?
     # following string can be used as a test sudoku:
     teststring = ".94...13..............76..2.8..1.....32.........2...6.....5.4.......8..7..63.4..8"
+
+
+def get_num_vars(filename):
+    num_vars = []
+    for line in open(filename):
+        if line.startswith(
+            "p"
+        ):  # gathering number of variables and number of clauses from line starting with 'p'
+            num_vars = line.split()[2]
+            num_vars = int(num_vars)  # transforming into integers
+            return num_vars
+
+
+def init_VSIDS(
+    num_vars, cnf_formula
+):  # making an initial dictionary of all the literals
+    literal_count = {}
+    for x in range(-num_vars, num_vars + 1):
+        literal_count[x] = 0
+    for clause in cnf_formula:
+        for literal in clause:
+            literal_count[literal] += 1
+    return literal_count
+
+
+def increase_VSIDS_counter(
+    conflict, literal_count
+):  # increasing the counter of the literals in the dictionary if they are present in a conflict
+    for literal in conflict:
+        literal_count[literal] += 1
+    return literal_count
+
+
+def decrement_VSIDS(
+    num_vars, literal_count, decrement_step_size
+):  # decrement_step_size is how fast the value is decreased
+    # (in a range of 0-100, where 95 is a standard value)
+    for x in range(-num_vars, num_vars + 1):
+        literal_count[x] = (decrement_step_size * literal_count[x]) / 100
+    return literal_count
+
+
+def choose_var_VSIDS(
+    literal_count, unit_clauses, num_vars
+):  # choosing the literal with the highest value in the dictionary to branch on
+    maximum = 0
+    VSIDS_variable = 0
+    for j in range(-num_vars, num_vars + 1):
+        if (
+            literal_count[j] >= maximum
+            and j not in unit_clauses
+            and -j not in unit_clauses
+        ):
+            maximum = literal_count[j]
+            VSIDS_variable = j
+    return VSIDS_variable
+
+
+# comments about conflict: I couldnt find conflict clauses anywhere, we need to keep track of conflicts to add to their counter
+# unit clauses in the last function is helpful because it does not make sense to pick the next variable from a set of unit clauses, its just a waste of time.
