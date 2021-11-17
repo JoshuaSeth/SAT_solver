@@ -61,3 +61,4 @@ for key, result_times in results:
             t_test_result = stats.ttest_ind(result_times, compare_against_result_times, equal_var=False)
             #Use the KEY names to nicely format and now what we actually tested
             print("Compared {0} and {1}. T-test result is {2}".format(key, compare_key, t_test_result))
+            print("Standard deviations", stats.std(result_times), stats.std(compare_against_result_times))
