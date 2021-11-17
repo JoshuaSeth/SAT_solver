@@ -137,6 +137,20 @@ def get_rand_var(cnf_formula):
     variable = clause[random.randint(0, len(clause) - 1)]
     return variable
 
+def get_jw_counted_terms(cnf_formula): # 2 sided jw heuristic
+    count_literals = {}
+    for clauses in cnf_formula:
+        for terms in clauses:
+            abs(terms)
+            if terms in count_literals:
+                count_literals[terms] = 0.2 ** -len(clauses)
+            else:
+                count_literals[terms] = 0.2 ** -len(clauses)
+    return count_literals
+
+def jw_var_picker(cnf_formula): 
+    counts = get_jw_counted_terms(cnf_formula)
+    return max(counts, key = counts.get)
 
 def get_variable_by_heuristic(cnf_formula, heuristic, current_variable_assignment):
     if heuristic is "random":
@@ -146,10 +160,12 @@ def get_variable_by_heuristic(cnf_formula, heuristic, current_variable_assignmen
             variable = get_rand_var(cnf_formula)
             if not variable in current_variable_assignment:
                 return abs(variable)
-    if heuristic is "cdcvi": #Of hoe je dat ook schrijft
-        pass #Jouw heuristic hier...
-
-
+    if heuristic is "jw_var_picker": #Of hoe je dat ook schrijft
+        variable = jw_lang_var_picker(cnf_formula)
+        if not variable in current_variable_assignment:
+            return abs(variable)
+        return variable
+    
     # If no heuristic was matched it was probably not implemented
     warnings.warn(
         "{0} was not implemented yet or an invalid heuristic. Falling back to random varaible selecion".format(
