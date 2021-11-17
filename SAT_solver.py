@@ -203,7 +203,7 @@ def SAT_check_and_backtrack(
     return random_variable, history_copy, var_ass_history, backtracked_cnf_formula
 
 
-def SAT_solve(cnf_formula, log_level=0):
+def SAT_solve(cnf_formula, log_level=0, heuristic="random"):
     """SAT solves a formula that is already in CNF. Returns SAT, variable assignment
     if it is satisfiable. Returns UNSAT if no satisfiable assignments exist"""
     start_time = datetime.datetime.now()
