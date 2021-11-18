@@ -2,8 +2,8 @@
 import sys
 from SAT_solver import SAT_solve
 from SAT_helper_functions import *
-import glob
 import datetime
+from Sudoku_rstring_reader import *
 
 # opening files any of these objects can be chosen to run the sat solver on
 # Satisfiable assignment of variables satifies all these rules
@@ -41,15 +41,20 @@ print_assignments_as_sudoku(flatten(example_sudoku_clauses))
 
 #Print as nicely formatted sudoku
 print_assignments_as_sudoku(assignments)
-# Reading multiple sudoku.txt files. Assumes we name our files 'sudoku_*.txt' where * = a number for each individual sudoku.
-# Also assumes 'sudoku_*.txt' are located in a folder named 'cnf_sudokus'
-"""
-sudoku_path = 'cnf_sudokus'
-for path in glob.iglob(sudoku_path + 'sudoku_*.txt'):
-    SAT_solve(cnf_formula, log_level = 0)
-"""
+
 delta_time = (
     datetime.datetime.now() - start_time
 )  # check and save time after the code is ran minus time before the code is ran.
 # delta_time is the time it took to complete
 print(delta_time)
+
+'''Code to run all of the sudokus in the 1000 sudokus.txt file'''
+'''
+for i in range(len(int_sudokus_lol)):
+    cnf_formula = read_cnf_from_dimac(sudoku_rules_path) # this seems like an excessively slow step, to read from the file over and over  
+    cnf_formula.extend(int_sudokus_lol[i])
+    sat, time, assignments = SAT_solve(cnf_formula, log_level=1)
+    print(sat)
+    print_assignments_as_sudoku(flatten(int_sudokus_lol[i]))
+    print_assignments_as_sudoku(assignments)
+'''
