@@ -4,10 +4,6 @@ import math
 sudoku_file = '1000 sudokus.txt'
 thousand_sudokus = open(sudoku_file, 'r')
 sudoku_lines = thousand_sudokus.readlines()
-sudoku_1 = sudoku_lines[8]
-
-sudokus = sudoku_lines[0:3]
-print(sudokus)
 
 def generate_matrix(string):
     size = math.floor(math.sqrt(len(sudoku_lines[0])))
@@ -16,24 +12,6 @@ def generate_matrix(string):
         for j in range(size):
             matrix[i][j] = string[i * 9 + j]
     return np.array(matrix)
-
-
-def sudoku_to_DIMACS(sudokus):
-    """Prints set of clauses given a sudoku as a string"""  # code needs to be cleaned up after it is finished
-    count = 0
-    list = []
-
-    for sudoku in sudokus:
-        for element in sudoku:
-            count = count + 1
-            if count > 9:
-                count = 0
-            if element != ".":
-                row = math.ceil(count / 9)
-                column = count - (row - 1) * 9
-                variable = str(row) + str(column) + str(element) + str(' ') + str('0')
-                list.append(variable)
-    return list
 
 def all_sudokus_at_once(sudokus):
     sudoku_file = sudokus
@@ -85,7 +63,7 @@ def make_row__col_strings(rows, cols):
     for i in range(len(row_and_col)):
         test = row_and_col[i] + sudoku_values[i]
         all_coords_and_values.append(test)
-        test = all_coords_and_values[i] + str(' ') + str('0')
+        test = all_coords_and_values[i] #+ str(' ') + str('0')
         all_dimac.append(test)
     return all_dimac
 
@@ -108,12 +86,36 @@ def cumsum_list(list):
         cumsum_list.append(cumsum)
     return cumsum_list
 
-cumsum_list = cumsum_list(location_list)
+cumsum_list_sudokus = cumsum_list(location_list)
 
-real_list = []
-for i in range(len(cumsum_list)):
-    new_elements = cumsum_list[i] + 1 * i
-    real_list.append(new_elements)
+def get_sudoku_int_lol(cumsum_list):
+    real_list = []
+    for i in range(len(cumsum_list)):
+        new_elements = cumsum_list[i] + 1 * i
+        real_list.append(new_elements)
 
-for j in range(len(real_list)):
-    all_dimac_clauses.insert(real_list[j], 'XXXXXXXX')
+    for j in range(len(real_list)):
+        all_dimac_clauses.insert(real_list[j], 'XXXXXXXX')
+
+    sudoku_list = []
+    for i in range(len(real_list) -1):
+        sudoku = all_dimac_clauses[real_list[i] + 1:real_list[i+1]]
+        sudoku_list.append(sudoku)
+
+    def list_to_list_of_lists(lst):
+        return list(map(lambda el:[el], lst))
+
+    sudoku_lol = []
+    for i in range(len(sudoku_list)):
+        sudoku_individual_lol = list_to_list_of_lists(sudoku_list[i])
+        sudoku_lol.append(sudoku_individual_lol)
+
+    int_sudokus_lol = []
+    for i in range(len(sudoku_lol)):
+        int_sudoku_lol = [[int(float(j)) for j in i] for i in sudoku_lol[i]]
+        int_sudokus_lol.append(int_sudoku_lol)
+
+    return int_sudokus_lol
+
+int_sudokus_lol = get_sudoku_int_lol(cumsum_list_sudokus)
+print(int_sudokus_lol)
