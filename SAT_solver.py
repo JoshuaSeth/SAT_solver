@@ -173,32 +173,17 @@ def SAT_check_and_backtrack(
         # If bot P and -P don't work backtrack further back
         if len(var_ass_history) > 1:
             if (
+                #Check if the last to assignments were negations of each other (i.e. 355, -355)
                 abs(var_ass_history[len(var_ass_history) - 1])
                 - abs(var_ass_history[len(var_ass_history) - 2])
                 == 0
             ):
-                if log_level > 1:
-                    print(
-                        "\n\n Annuling var assignments before: {0}".format(
-                            var_ass_history
-                        )
-                    )
-
                 # Remove the last P and -p for the next value reassignment
                 var_ass_history = var_ass_history[: len(var_ass_history) - 2]
                 history_copy = history_copy[: len(history_copy) - 2]
                 unit_assignment_history = unit_assignment_history[:len(unit_assignment_history) - 2]
 
-                if log_level > 1:
-                    print("Annuling var assignments AFTER: {0}".format(var_ass_history))
-                    print(
-                        "History AFTER: {0} \n\n".format(
-                            history_copy[len(history_copy) - 1]
-                        )
-                    )
 
-        if log_level > 2:
-            print("history length: {0}".format(len(history)))
 
         # Length of list might jave changed because of previous action
         if len(var_ass_history) > 0:
@@ -228,7 +213,7 @@ def SAT_solve(cnf_formula, log_level=0, heuristic="random"):
     # Might want to implemented backtracking data in a more sophisticated manner later
     history = []
     
-
+    step_num = 1
     # Continuously apply rules sequentially
     while True:
         # (SAT): If formula is empty it is satisfied
@@ -250,3 +235,13 @@ def SAT_solve(cnf_formula, log_level=0, heuristic="random"):
             var_assignment_history,
             unit_assignments, unit_assignments_history
         )
+
+        #Print the partially filled in sudoku every so many steps
+        if step_num % 8 == 0:
+            currently_filled_in = []
+            currently_filled_in.extend(var_assignment_history)
+            currently_filled_in.extend(unit_assignments)
+            print("Current filled in sudoku")
+            print_assignments_as_sudoku(currently_filled_in, header="Unfinished sudoku")
+        
+        step_num+=1

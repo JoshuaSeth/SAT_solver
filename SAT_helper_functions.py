@@ -226,7 +226,7 @@ def has_empty_clause(cnf_formula, log_level):
             return True
     return False
 
-def print_assignments_as_sudoku(assignments):
+def print_assignments_as_sudoku(assignments, header="Finished Sudoku"):
     #Only keep positives
     assignments = [item for item in assignments if item >= 0]
     #Sort from low to high
@@ -241,7 +241,7 @@ def print_assignments_as_sudoku(assignments):
         value = int(str(item)[2])
         grid[index_x][index_y]= value
     df = pd.DataFrame.from_records(grid)
-    print("\nFilled in sudoku")
+    print("\n"+header)
     print(df.to_string(index=False, header=False))
 
 
