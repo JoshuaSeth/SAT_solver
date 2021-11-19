@@ -1,7 +1,7 @@
 import numpy as np
 import math
 
-sudoku_file = '1000 sudokus.txt'
+sudoku_file = 'sudoku_resources/1000_sudokus.txt'
 thousand_sudokus = open(sudoku_file, 'r')
 sudoku_lines = thousand_sudokus.readlines()
 
@@ -33,7 +33,7 @@ def all_sudokus_at_once(sudokus):
 
     return rows, cols, sudoku_matrices, sudoku_lines
 
-rows, cols, sudoku_matrices, sudoku_lines = all_sudokus_at_once('1000 sudokus.txt')
+rows, cols, sudoku_matrices, sudoku_lines = all_sudokus_at_once(sudoku_file)
 
 def make_row__col_strings(rows, cols):
     all_rows_plus_one = []
