@@ -145,9 +145,7 @@ def SAT_check_and_backtrack(
 ):
     if log_level > 1:
         print("\n Starting new consistency step")
-    history_copy = copy.deepcopy(history)
     # Cannot modify paramter objects in python
-    var_ass_history = copy.deepcopy(var_assignment_history)
     # (CONSISTENT & BACKTRACK): check of formula consistent else backtrack
     # INcosistency can only be present in unit clauses
     unit_clauses, variables_in_unit_clauses = get_unit_clauses(cnf_formula)
@@ -171,32 +169,32 @@ def SAT_check_and_backtrack(
 
         # Try to switch around the last assigned variable
         # If bot P and -P don't work backtrack further back
-        if len(var_ass_history) > 1:
+        if len(var_assignment_history) > 1:
             if (
                 #Check if the last to assignments were negations of each other (i.e. 355, -355)
-                abs(var_ass_history[len(var_ass_history) - 1])
-                - abs(var_ass_history[len(var_ass_history) - 2])
+                abs(var_assignment_history[len(var_assignment_history) - 1])
+                - abs(var_assignment_history[len(var_assignment_history) - 2])
                 == 0
             ):
                 # Remove the last P and -p for the next value reassignment
-                var_ass_history = var_ass_history[: len(var_ass_history) - 2]
-                history_copy = history_copy[: len(history_copy) - 2]
+                var_assignment_history = var_assignment_history[: len(var_assignment_history) - 2]
+                history = history[: len(history) - 2]
                 unit_assignment_history = unit_assignment_history[:len(unit_assignment_history) - 2]
 
 
 
         # Length of list might jave changed because of previous action
-        if len(var_ass_history) > 0:
+        if len(var_assignment_history) > 0:
             # reload the cnf formula state from before this assignment
-            backtracked_cnf_formula = history_copy[len(history_copy) - 2]
+            backtracked_cnf_formula = history[len(history) - 2]
             unit_assignments = unit_assignment_history[len(unit_assignment_history) - 2]
-            random_variable = var_ass_history[len(var_ass_history) - 1] * -1
+            random_variable = var_assignment_history[len(var_assignment_history) - 1] * -1
 
         # If the history is to short (ie. we backtracked to step 1 again, choose a random var)
-        if len(var_ass_history) is 0:
+        if len(var_assignment_history) is 0:
             random_variable = None
 
-    return random_variable, history_copy, var_ass_history, backtracked_cnf_formula, unit_assignments
+    return random_variable, history, var_assignment_history, backtracked_cnf_formula, unit_assignments
 
 
 def SAT_solve(cnf_formula, log_level=0, heuristic="random"):
