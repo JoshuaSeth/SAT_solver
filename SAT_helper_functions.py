@@ -351,15 +351,16 @@ def get_sudoku_from_dots(file_path, sudoku_size):
                     row = str(row)
                     if row.isalpha():
                         row = chars.index(row)
-                        row = row.zfill(num_characters_per_part)
+                    row = row.rjust(num_characters_per_part, '9')
                     if column.isalpha():
                         column = chars.index(column)
-                        column = column.zfill(num_characters_per_part)
+                    column = column.rjust(num_characters_per_part, '9')
                     if character.isalpha():
                         character = str(chars.index(character))
                         character = character.zfill(num_characters_per_part)
                     variable = str(row) + str(column) + str(character)
                     cnf_formula.append([int(variable)])
-            print_assignments_as_sudoku(flatten(cnf_formula))
+            if sudoku_size==16:
+                print(cnf_formula)
             all_formulas.append(cnf_formula)
         return all_formulas
