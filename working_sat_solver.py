@@ -52,8 +52,8 @@ def get_tautologies(cnf_formula): # niet nodig
     for clause in cnf_formula:
         for term in clause:
             if term * -1 in clause:
-                tautologies.append(clause)
-    return tautologies
+                tautologies.append(clause) 
+    return tautologies 
 
 def get_counter(formula):
     counter = {}
@@ -63,7 +63,7 @@ def get_counter(formula):
                 counter[literal] += 1
             else:
                 counter[literal] = 1
-    return counter
+    return counter 
 
 def get_and_remove_pure_literal(formula):
     counter = get_counter(formula)
@@ -88,14 +88,14 @@ def get_and_remove_unit_clauses(formula):
             return -1, []
         if not formula:
             return formula, assignment
-        unit_clauses = [c for c in formula if len(c) == 1]
+        unit_clauses = [c for c in formula if len(c) == 1] 
     return formula, assignment
 
 def get_jw_counted_terms(cnf_formula): # 2 sided jw heuristic
     count_literals = {}
-    for clauses in cnf_formula:
+    for clauses in cnf_formula: 
         for terms in clauses:
-            abs(terms)
+            abs(terms) 
             if terms in count_literals:
                 count_literals[terms] = 2 ** -len(clauses)
             else:
@@ -115,6 +115,57 @@ def get_rand_var(cnf_formula):
         clause = cnf_formula[random.randint(0, len(cnf_formula) - 1)]
     variable = clause[random.randint(0, len(clause) - 1)]
     return variable
+
+def MOMS_heuristic(current_CNF): 
+    '''Checks current state of CNF and chooses a next variable to set based on 
+    the number of occurences of each variable in the smallest leftover clauses'''
+    # determine total length of CNF to set as a largest possible clause length 
+    length_smallest = 0 # variable name may be confusing, but is necessary to avoid extra work later on
+    for clause in current_CNF:
+        length_smallest += len(clause)
+    
+    # check the length of the smallest clause 
+    for clause in current_CNF: 
+        if len(clause) < length_smallest:
+            length_smallest = len(clause)
+    
+    # keep track of occurences of variables in a dictionary 
+    dict_abs = {}
+    dict_both = {}
+
+    # count occurences of every variable in the smallest clauses 
+    for clause in current_CNF:
+        if len(clause) == length_smallest:
+            for variable in clause:
+                
+                # count occurences for instances
+                if not variable in dict_both:
+                    dict_both[variable] = 1
+                else:
+                    dict_both[variable] += 1
+                
+                # count occurences for variable in total 
+                if not abs(variable) in dict_abs:
+                    dict_abs[abs(variable)] = 1
+                else:
+                    dict_abs[abs(variable)] += 1 
+    
+    '''Tune this parameter'''
+    k=1 
+
+    for item in dict_abs.keys():
+        if item not in dict_both:
+            dict_both[item] = 0 
+        if -item not in dict_both:
+            dict_both[-item] = 0
+
+        dict_abs[item] = dict_abs[item] * 2 ** k + dict_both[item] * dict_both[-item]
+    
+    # get value with highest score 
+    winning_variable = max(dict_abs, key=dict_abs.get) 
+    '''Note that we take the FIRST encountered element with the highest score here, there can be more variables with the same number of counts. Maybe we want to add some code that randomly determines which variable out of the ones with the highest number of counts we take.'''
+
+    return winning_variable 
 
 def backtracking(formula, assignment, heuristic):
     formula, pure_assignment = get_and_remove_pure_literal(formula)
@@ -143,7 +194,8 @@ def main():
     individual_solve_times = []
     for i in range(1,20):
         starttime_per_sudoku = datetime.datetime.now()
-        cnf_formula = read_cnf_from_dimac('sudoku-rules.txt') # this seems like an excessively slow step, to read from the file over and over  
+        # this seems like an excessively slow step, to read from the file over and over  
+        cnf_formula = read_cnf_from_dimac('dimac_files/sudoku-rules.txt') # added the folder to resolve an error
         cnf_formula.extend(int_sudokus_lol[i])
         solution = backtracking(cnf_formula, [], heuristic)
         print('Satisfiable configuration found, printing solution as a sudoku')  
