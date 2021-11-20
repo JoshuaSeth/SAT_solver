@@ -323,3 +323,43 @@ def choose_var_VSIDS(
 
 # comments about conflict: I couldnt find conflict clauses anywhere, we need to keep track of conflicts to add to their counter
 # unit clauses in the last function is helpful because it does not make sense to pick the next variable from a set of unit clauses, its just a waste of time.
+chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" #these are the digits you will use for conversion back and forth
+charsLen = len(chars)
+
+def get_sudoku_from_dots(file_path, sudoku_size):
+    """Returns a list of sudokus from file path. (i.e. list of list of lists)""" 
+    with open(file_path, 'r') as sudokus:
+        count = 0
+        all_formulas = []
+        num_characters_per_part = len(str(sudoku_size)) #4 = 1, 9= 1, 16 = 2, 100=3
+        print(sudoku_size, num_characters_per_part)
+        for line in sudokus:
+            cnf_formula=[]
+            count = 0
+            for character in line:
+                
+                #After 9 x 9 .. we should have a full sudoku
+                # if count % (sudoku_size*sudoku_size) == 0:
+                #     count = 0
+                #     all_formulas.append(cnf_formula)
+                #     print_assignments_as_sudoku(flatten(cnf_formula))
+                #     cnf_formula = []
+                count+=1
+                if character != "." and character != "\n":
+                    row = math.ceil(count / sudoku_size)
+                    column = str(count - (row - 1) * sudoku_size)
+                    row = str(row)
+                    if row.isalpha():
+                        row = chars.index(row)
+                        row = row.zfill(num_characters_per_part)
+                    if column.isalpha():
+                        column = chars.index(column)
+                        column = column.zfill(num_characters_per_part)
+                    if character.isalpha():
+                        character = str(chars.index(character))
+                        character = character.zfill(num_characters_per_part)
+                    variable = str(row) + str(column) + str(character)
+                    cnf_formula.append([int(variable)])
+            print_assignments_as_sudoku(flatten(cnf_formula))
+            all_formulas.append(cnf_formula)
+        return all_formulas

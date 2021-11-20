@@ -226,19 +226,24 @@ def main():
     time_to_solve_all_input_sudokus = endtime_all_sudokus - starttime_all_sudokus
     print(time_to_solve_all_input_sudokus)
 
-def sat_experiment_connector(cnf_formula, heuristic):
+def sat_experiment_connector(cnf_formula, heuristic_name):
     '''Quick connector function to easily connect the SAT solver with the experiment.py
     Basically the same as main() but now with the formula and heuristic as parameters and with return vars'''
-
+    if heuristic_name == "jw":
+        heuristic = jw_var_picker
+    if heuristic_name == "moms":
+        heuristic = MOMS_heuristic
+    else: heuristic = get_rand_var
     start_time = datetime.datetime.now()
     solution = backtracking(cnf_formula, [], heuristic)
     if solution:
         print_assignments_as_sudoku(solution)  
         end_time = datetime.datetime.now()
-        time = end_time - start_time
-        return "sat", time
+        return "sat", end_time - start_time
     else:
         print('Given formula has no satisfiable configuration')
+        end_time = datetime.datetime.now()
+        return "unsat", end_time - start_time
     
 
 if __name__ == '__main__':
