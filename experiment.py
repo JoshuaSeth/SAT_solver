@@ -4,6 +4,7 @@ from working_sat_solver import sat_experiment_connector
 import pickle
 from scipy import stats
 import copy
+from tqdm import tqdm
 
 # Experiment variables:
 experiment_log_level = 0 #Can be anything depending on what you want
@@ -19,14 +20,6 @@ sudoku_rules_16x16_cnf = read_cnf_from_dimac("sudoku_resources/sudoku-rules-16x1
 sudokus_4x4_cnf = get_sudoku_from_dots("sudoku_resources/4x4.txt", 4)
 sudokus_9x9_cnf = get_sudoku_from_dots("sudoku_resources/9x9.txt", 9)
 sudokus_16x16_cnf = get_sudoku_from_dots("sudoku_resources/16x16.txt", 16)
-print("9s")
-print(sudokus_9x9_cnf[0])
-print("4s")
-
-print(sudokus_4x4_cnf[0])
-print("16s")
-
-print(sudokus_16x16_cnf[0])
 
 # Collect all sudokus and rules in one big list so we can iterate over it in 1 experiment instead of repeating code
 sudokus_and_rules_collection =[(sudokus_4x4_cnf, sudoku_rules_4x4_cnf), (sudokus_9x9_cnf, sudoku_rules_9x9_cnf), (sudokus_16x16_cnf, sudoku_rules_16x16_cnf)]
@@ -41,42 +34,44 @@ ind =0
 for sudoku_collection, rules in sudokus_and_rules_collection:
     #Test against the 2 heuristic
     for heuristic in ["moms", "jw", "random"]:
+        #Save the name of the collection (i.e. sudokus_16x16_cnf) as a string. 
+        python_var_name_as_string = ["4x4", "9x9", "16x16"][ind]
+        print("Experimenting heuristic: " + heuristic + python_var_name_as_string)
         #Track the resulting time
         times_for_sudokus = []
         index=0
         #Go through sudoku in sudko collection
-        for sudoku in sudoku_collection:
+        for i in tqdm(range(max_sudokus_tested)):
+            sudoku = sudoku_collection[i]
             sudoku_and_rules_as_cnf = []
             sudoku_and_rules_as_cnf.extend(sudoku)
             sudoku_and_rules_as_cnf.extend(copy.deepcopy(rules))
             #Attempt to SAT solve
             sat, time_spent =  sat_experiment_connector(sudoku_and_rules_as_cnf, heuristic_name=heuristic)
             #Save to sudoku times
-            times_for_sudokus.append(time_spent)
+            times_for_sudokus.append(time_spent.total_seconds() * 1000)
             index+=1
             #Stop when we have done as many tests as we wanted for the category we are in
             if index == max_sudokus_tested:
                 break
-        #Save the name of the collection (i.e. sudokus_16x16_cnf) as a string. ONLY WORKS python3.8+
-        python_var_name_as_string = ["4x4", "9x9", "16x16"][ind]
+        
         #Save to results under appropriate name so we cna find back alter
         results[python_var_name_as_string + "_" + heuristic] = times_for_sudokus
-        print(times_for_sudokus)
         with open(python_var_name_as_string + "_" + heuristic+".txt", "wb") as fp:   #Pickling
             pickle.dump(times_for_sudokus, fp)
     ind+=1
 
 print(results)
 
-#T-TESTS
-#Since we now have a collection with results we might as well do the t-tests immediately
-# Note that you can compare 6 x 5 values (compare each result against the others)
-for key, result_times in results:
-    #Compare against all other results
-    for compare_key, compare_against_result_times in results:
-        if not compare_against_result_times is result_times:
-            #Does a UNPAIRED t-test returns t and p values
-            t_test_result = stats.ttest_ind(result_times, compare_against_result_times, equal_var=False)
-            #Use the KEY names to nicely format and now what we actually tested
-            print("Compared {0} and {1}. T-test result is {2}".format(key, compare_key, t_test_result))
-            print("Standard deviations", stats.std(result_times), stats.std(compare_against_result_times))
+# #T-TESTS
+# #Since we now have a collection with results we might as well do the t-tests immediately
+# # Note that you can compare 6 x 5 values (compare each result against the others)
+# for key, result_times in results:
+#     #Compare against all other results
+#     for compare_key, compare_against_result_times in results:
+#         if not compare_against_result_times is result_times:
+#             #Does a UNPAIRED t-test returns t and p values
+#             t_test_result = stats.ttest_ind(result_times, compare_against_result_times, equal_var=False)
+#             #Use the KEY names to nicely format and now what we actually tested
+#             print("Compared {0} and {1}. T-test result is {2}".format(key, compare_key, t_test_result))
+#             print("Standard deviations", stats.std(result_times), stats.std(compare_against_result_times))

@@ -237,7 +237,6 @@ def sat_experiment_connector(cnf_formula, heuristic_name):
     start_time = datetime.datetime.now()
     solution = backtracking(cnf_formula, [], heuristic)
     if solution:
-        print_assignments_as_sudoku(solution)  
         end_time = datetime.datetime.now()
         return "sat", end_time - start_time
     else:

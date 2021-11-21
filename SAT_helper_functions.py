@@ -360,7 +360,5 @@ def get_sudoku_from_dots(file_path, sudoku_size):
                         character = character.zfill(num_characters_per_part)
                     variable = str(row) + str(column) + str(character)
                     cnf_formula.append([int(variable)])
-            if sudoku_size==16:
-                print(cnf_formula)
             all_formulas.append(cnf_formula)
         return all_formulas
