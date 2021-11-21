@@ -337,13 +337,6 @@ def get_sudoku_from_dots(file_path, sudoku_size):
             cnf_formula=[]
             count = 0
             for character in line:
-                
-                #After 9 x 9 .. we should have a full sudoku
-                # if count % (sudoku_size*sudoku_size) == 0:
-                #     count = 0
-                #     all_formulas.append(cnf_formula)
-                #     print_assignments_as_sudoku(flatten(cnf_formula))
-                #     cnf_formula = []
                 count+=1
                 if character != "." and character != "\n":
                     row = math.ceil(count / sudoku_size)
@@ -351,13 +344,14 @@ def get_sudoku_from_dots(file_path, sudoku_size):
                     row = str(row)
                     if row.isalpha():
                         row = chars.index(row)
+                    #Pad the number with 9s if we have 16+ size sudokus
                     row = row.rjust(num_characters_per_part, '9')
                     if column.isalpha():
                         column = chars.index(column)
                     column = column.rjust(num_characters_per_part, '9')
                     if character.isalpha():
                         character = str(chars.index(character))
-                        character = character.zfill(num_characters_per_part)
+                    character = character.rjust(num_characters_per_part, '9')
                     variable = str(row) + str(column) + str(character)
                     cnf_formula.append([int(variable)])
             all_formulas.append(cnf_formula)
