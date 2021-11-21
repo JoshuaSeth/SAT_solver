@@ -117,5 +117,5 @@ def get_sudoku_int_lol(cumsum_list):
 
     return int_sudokus_lol
 
-int_sudokus_lol = get_sudoku_int_lol(cumsum_list_sudokus)
-print(int_sudokus_lol)
+#int_sudokus_lol = get_sudoku_int_lol(cumsum_list_sudokus)
+#print(int_sudokus_lol)
