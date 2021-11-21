@@ -235,14 +235,19 @@ def sat_experiment_connector(cnf_formula, heuristic_name):
         heuristic = MOMS_heuristic
     else: heuristic = get_rand_var
     start_time = datetime.datetime.now()
-    solution = backtracking(cnf_formula, [], heuristic)
-    if solution:
+    try:
+        solution = backtracking(cnf_formula, [], heuristic)
+        if solution:
+            end_time = datetime.datetime.now()
+            return "sat", end_time - start_time
+        else:
+            print('Given formula has no satisfiable configuration')
+            end_time = datetime.datetime.now()
+            return "unsat", end_time - start_time
+    except Exception as e:
+        print("SUDOKU LIEP VAST< WSS RECURSION ERROR. \n\n ERROR:", e)
         end_time = datetime.datetime.now()
-        return "sat", end_time - start_time
-    else:
-        print('Given formula has no satisfiable configuration')
-        end_time = datetime.datetime.now()
-        return "unsat", end_time - start_time
+        return "recursion exceeded", end_time - start_time
     
 
 if __name__ == '__main__':
