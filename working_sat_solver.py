@@ -91,13 +91,12 @@ def get_and_remove_unit_clauses(formula):
         unit_clauses = [c for c in formula if len(c) == 1] 
     return formula, assignment
 
-def get_jw_counted_terms(cnf_formula): # 2 sided jw heuristic
+def get_jw_counted_terms(cnf_formula): # ONE sided jw heuristic
     count_literals = {}
     for clauses in cnf_formula: 
         for terms in clauses:
-            abs(terms) 
             if terms in count_literals:
-                count_literals[terms] = 2 ** -len(clauses)
+                count_literals[terms] += 2 ** -len(clauses)
             else:
                 count_literals[terms] = 2 ** -len(clauses)
     return count_literals
