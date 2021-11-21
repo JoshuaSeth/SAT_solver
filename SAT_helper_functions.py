@@ -332,7 +332,7 @@ def get_sudoku_from_dots(file_path, sudoku_size):
         count = 0
         all_formulas = []
         num_characters_per_part = len(str(sudoku_size)) #4 = 1, 9= 1, 16 = 2, 100=3
-        print(sudoku_size, num_characters_per_part)
+        #print(sudoku_size, num_characters_per_part)
         for line in sudokus:
             cnf_formula=[]
             count = 0
