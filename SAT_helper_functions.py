@@ -226,7 +226,12 @@ def has_empty_clause(cnf_formula, log_level):
             return True
     return False
 
-def print_assignments_as_sudoku(assignments, header="Finished Sudoku", size=16):
+def print_assignments_as_sudoku(assignments, flush=True, header="Finished Sudoku", size=16):
+    
+    if(flush):
+        CURSOR_UP_ONE = '\x1b[1A'
+        ERASE_LINE = '\x1b[2K'
+        print(CURSOR_UP_ONE + ERASE_LINE)
     #Only keep positives
     assignments = [item for item in assignments if item >= 0]
     #Sort from low to high
