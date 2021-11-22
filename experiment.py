@@ -21,12 +21,14 @@ max_sudokus_tested = 10 # How many sudoku points we collect per test category (i
 sudoku_rules_4x4_cnf = read_cnf_from_dimac("sudoku_resources/sudoku-rules-4x4.txt") 
 sudoku_rules_9x9_cnf = read_cnf_from_dimac("sudoku_resources/sudoku-rules-9x9.txt") 
 sudoku_rules_16x16_cnf = read_cnf_from_dimac("16x16_gen_rules.txt")
-print(sudoku_rules_16x16_cnf)
+# print(sudoku_rules_16x16_cnf)
 
 #Load the sudokus themselves (will be more than 10 so we run max of range 10)
 sudokus_4x4_cnf = get_sudoku_from_dots("sudoku_resources/4x4.txt", 4)
 sudokus_9x9_cnf = get_sudoku_from_dots("sudoku_resources/9x9.txt", 9)
 sudokus_16x16_cnf = get_sudoku_from_dots("sudoku_resources/16x16.txt", 16)
+
+print(sudokus_16x16_cnf[0])
 
 # Collect all sudokus and rules in one big list so we can iterate over it in 1 experiment instead of repeating code
 sudokus_and_rules_collection =[ (sudokus_16x16_cnf, sudoku_rules_16x16_cnf)]
@@ -41,9 +43,9 @@ ind =0
 
 for sudoku_collection, rules in sudokus_and_rules_collection:
     #Test against the 2 heuristic
-    for heuristic in ["moms", "jw", "random"]:
+    for heuristic in ["jw", "random", "moms"]:
         #Save the name of the collection (i.e. sudokus_16x16_cnf) as a string. 
-        python_var_name_as_string = ["4x4", "9x9","16x16"][ind]
+        python_var_name_as_string = ["16x16"][ind]
         print("Experimenting heuristic: " + heuristic + python_var_name_as_string)
         #Track the resulting time
         times_for_sudokus = []
