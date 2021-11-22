@@ -7,16 +7,6 @@ def parse_and_pad(input):
         result = result.rjust(2, '9')
     return result
 
-def recursive(term, number, colt, rowt):
-    for row_cell in range(1,5):
-        for col_cell in range(1,5):
-            x_cell = rowt * row_cell
-            y_cell = colt * col_cell
-            col = parse_and_pad(y_cell)
-            row = parse_and_pad(x_cell)
-            result= "-"+col+ row+ parse_and_pad(number)
-            if term != result:
-                rules.write(result  +" " + term + " 0\n")
 
 with open("16x16_gen_rules.txt", 'w') as rules:
     #Pt1 some number in every cell
@@ -35,7 +25,7 @@ with open("16x16_gen_rules.txt", 'w') as rules:
                 if len(str(var))==1:
                     var = var.rjust(2, '9')
                 #Every cell must have any number so 1 or 2 or 3 or 4
-                rules.write(col + row + var + " ")
+                rules.write(row +col +  var + " ")
 
                 
                     
@@ -64,8 +54,8 @@ with open("16x16_gen_rules.txt", 'w') as rules:
                     if len(str(var_2))==1:
                         var_2 = var.rjust(2, '9')
                     if var != var_2:
-                        var_2_str =  "-"+ col + row + var_2
-                        var_1_str =  "-"+ col + row + var
+                        var_2_str =  "-"+ row +col +  var_2
+                        var_1_str =  "-"+ row +col +  var
                         rules.write(var_1_str + " " + var_2_str + " 0\n")
     
     #Pt 3 every number once per column
@@ -87,8 +77,8 @@ with open("16x16_gen_rules.txt", 'w') as rules:
                     if len(str(var))==1:
                         var = var.rjust(2, '9')
                     if row != row_2:
-                        row_2_str =  "-"+ col + row_2 + var
-                        row_1_str =  "-"+ col + row + var
+                        row_2_str =  "-"+ row_2 +col+ var
+                        row_1_str =  "-" + row + col+ var
                         rules.write(row_1_str + " " + row_2_str + " 0\n")
 
     #Pt 4 every number once per row
@@ -110,8 +100,8 @@ with open("16x16_gen_rules.txt", 'w') as rules:
                     if len(str(var))==1:
                         var = var.rjust(2, '9')
                     if col != col_2:
-                        col_2_str =  "-"+ col_2 + row + var
-                        col_1_str =  "-"+ col + row + var
+                        col_2_str =  "-"+  row +col_2 + var
+                        col_1_str =  "-"+  row +col + var
                         rules.write(col_1_str + " " + col_2_str + " 0\n")
 
     #Now loop through areas of cells
@@ -128,8 +118,8 @@ with open("16x16_gen_rules.txt", 'w') as rules:
                             col_2_str = parse_and_pad(col_2)
                             row_2_str = parse_and_pad(row_2)
 
-                            str_1 = "-"+col_str+row_str+var_str
-                            str_2 = "-"+col_2_str+row_2_str+var_str
+                            str_1 = "-"+row_str+col_str+var_str
+                            str_2 = "-"+row_2_str+col_2_str+var_str
 
                             rules.write(str_1 + " " +str_2 + " 0\n")
     
@@ -147,8 +137,8 @@ with open("16x16_gen_rules.txt", 'w') as rules:
                             col_2_str = parse_and_pad(col_2)
                             row_2_str = parse_and_pad(row_2)
 
-                            str_1 = "-"+col_str+row_str+var_str
-                            str_2 = "-"+col_2_str+row_2_str+var_str
+                            str_1 = "-"+row_str+col_str+var_str
+                            str_2 = "-"+row_2_str+col_2_str+var_str
 
                             rules.write(str_1 + " " +str_2 + " 0\n")
 
@@ -166,8 +156,8 @@ with open("16x16_gen_rules.txt", 'w') as rules:
                             col_2_str = parse_and_pad(col_2)
                             row_2_str = parse_and_pad(row_2)
 
-                            str_1 = "-"+col_str+row_str+var_str
-                            str_2 = "-"+col_2_str+row_2_str+var_str
+                            str_1 = "-"+row_str+col_str+var_str
+                            str_2 = "-"+row_2_str+col_2_str+var_str
 
                             rules.write(str_1 + " " +str_2 + " 0\n")
 
@@ -185,8 +175,8 @@ with open("16x16_gen_rules.txt", 'w') as rules:
                             col_2_str = parse_and_pad(col_2)
                             row_2_str = parse_and_pad(row_2)
 
-                            str_1 = "-"+col_str+row_str+var_str
-                            str_2 = "-"+col_2_str+row_2_str+var_str
+                            str_1 = "-"+row_str+col_str+var_str
+                            str_2 = "-"+row_2_str+col_2_str+var_str
 
                             rules.write(str_1 + " " +str_2 + " 0\n")
 
