@@ -4,24 +4,8 @@ import pandas as pd
 from Sudoku_rstring_reader import *
 import numpy as np
 from tqdm import tqdm
+from SAT_helper_functions import print_assignments_as_sudoku
 
-def print_assignments_as_sudoku(assignments):
-    #Only keep positives
-    assignments = [item for item in assignments if item >= 0]
-    #Sort from low to high
-    assignments = sorted(assignments)
-    #print them left to right
-    grid = []
-    for i in range(9):
-        grid.append([0]*9)
-    for item in assignments:
-        index_x = int(str(item)[0])-1
-        index_y=int(str(item)[1])-1
-        value = int(str(item)[2])
-        grid[index_x][index_y]= value
-    df = pd.DataFrame.from_records(grid)
-    print("\nFilled in sudoku")
-    print(df.to_string(index=False, header=False))
 
 def read_cnf_from_dimac(filename):
     cnf_formula = []
