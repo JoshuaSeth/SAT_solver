@@ -176,6 +176,7 @@ def backtracking(formula, assignment, heuristic):
         return assignment
 
     variable = heuristic(formula)
+
     solution = backtracking(remove_var_from_cnf(formula, variable), assignment + [variable], heuristic)
     if not solution:
         solution = backtracking(remove_var_from_cnf(formula, -variable), assignment + [-variable], heuristic)

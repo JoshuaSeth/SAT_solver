@@ -28,7 +28,7 @@ sudokus_9x9_cnf = get_sudoku_from_dots("sudoku_resources/9x9.txt", 9)
 sudokus_16x16_cnf = get_sudoku_from_dots("sudoku_resources/16x16.txt", 16)
 
 # Collect all sudokus and rules in one big list so we can iterate over it in 1 experiment instead of repeating code
-sudokus_and_rules_collection =[(sudokus_16x16_cnf, sudoku_rules_16x16_cnf)]
+sudokus_and_rules_collection =[(sudokus_4x4_cnf, sudoku_rules_4x4_cnf), (sudokus_9x9_cnf, sudoku_rules_9x9_cnf), (sudokus_16x16_cnf, sudoku_rules_16x16_cnf)]
 # ,(sudokus_4x4_cnf, sudoku_rules_4x4_cnf), 
 #Save the result of the 6 runs (2 heuristics x 3 sudoku sizes (x max_sudokus_tested datapoint))
 #So the results will be in the form [[x datapoints], [x datapoints], [x datapoints], [x datapoints], etc.]
@@ -40,9 +40,9 @@ ind =0
 
 for sudoku_collection, rules in sudokus_and_rules_collection:
     #Test against the 2 heuristic
-    for heuristic in [ "jw", "random"]:
+    for heuristic in ["moms", "jw", "random"]:
         #Save the name of the collection (i.e. sudokus_16x16_cnf) as a string. 
-        python_var_name_as_string = ["16x16"][ind]
+        python_var_name_as_string = ["4x4", "9x9","16x16"][ind]
         print("Experimenting heuristic: " + heuristic + python_var_name_as_string)
         #Track the resulting time
         times_for_sudokus = []
