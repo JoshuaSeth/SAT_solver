@@ -3,6 +3,7 @@ import datetime
 import pandas as pd
 from Sudoku_rstring_reader import *
 import numpy as np
+from tqdm import tqdm
 
 def print_assignments_as_sudoku(assignments):
     #Only keep positives
@@ -88,7 +89,8 @@ def get_and_remove_unit_clauses(formula):
             return -1, []
         if not formula:
             return formula, assignment
-        unit_clauses = [c for c in formula if len(c) == 1] 
+        unit_clauses = [c for c in formula if len(c) == 1]
+        
     return formula, assignment
 
 def get_jw_counted_terms(cnf_formula): # ONE sided jw heuristic
@@ -182,6 +184,7 @@ def MOMS_heuristic(current_CNF):
 def backtracking(formula, assignment, heuristic):
     formula, pure_assignment = get_and_remove_pure_literal(formula)
     formula, unit_assignment = get_and_remove_unit_clauses(formula)
+
     assignment = assignment + unit_assignment + pure_assignment
     if formula == -1:
         return []
@@ -190,6 +193,7 @@ def backtracking(formula, assignment, heuristic):
 
     variable = heuristic(formula)
 
+    print_assignments_as_sudoku(assignment)
     solution = backtracking(remove_var_from_cnf(formula, variable), assignment + [variable], heuristic)
     if not solution:
         solution = backtracking(remove_var_from_cnf(formula, -variable), assignment + [-variable], heuristic)

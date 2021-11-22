@@ -226,20 +226,39 @@ def has_empty_clause(cnf_formula, log_level):
             return True
     return False
 
-def print_assignments_as_sudoku(assignments, header="Finished Sudoku"):
+def print_assignments_as_sudoku(assignments, header="Finished Sudoku", size=16):
     #Only keep positives
     assignments = [item for item in assignments if item >= 0]
     #Sort from low to high
     assignments = sorted(assignments)
     #print them left to right
     grid = []
-    for i in range(9):
-        grid.append([0]*9)
+    index_modifier= len(str(size))-1 #will be 0 normally and 1 for 16
+    for i in range(size):
+        grid.append([0]*size)
     for item in assignments:
         index_x = int(str(item)[0])-1
         index_y=int(str(item)[1])-1
         value = int(str(item)[2])
+
+        #Do this different is
+        if size ==16:
+            index_x = str(str(item)[0:2])
+            if index_x[0]=="9":
+                index_x = index_x[1]
+            index_y = str(str(item)[2:4])
+            if index_y[0]=="9":
+                index_y = index_y[1]
+            value = str(str(item)[4:6])
+            if value[0]=="9":
+                value = value[1]
+            value = int(value)
+            index_x=int(index_x)-1
+            index_y=int(index_y)-1
+
         grid[index_x][index_y]= value
+
+
     df = pd.DataFrame.from_records(grid)
     print("\n"+header)
     print(df.to_string(index=False, header=False))
