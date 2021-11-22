@@ -5,10 +5,16 @@ import pickle
 from scipy import stats
 import copy
 from tqdm import tqdm
+from distribution_test import get_best_distribution 
+import warnings
+warnings.filterwarnings("ignore")
+
+import sys
+sys.setrecursionlimit(10**5) 
 
 # Experiment variables:
 experiment_log_level = 0 #Can be anything depending on what you want
-max_sudokus_tested = 50 # How many sudoku points we collect per test category (i.e. run 10 sudoku's though the sat solver for 4x4, heuristic 2)
+max_sudokus_tested = 10 # How many sudoku points we collect per test category (i.e. run 10 sudoku's though the sat solver for 4x4, heuristic 2)
 
 #These are the sudoku rules in CNF form (list of lists)
 #We can load the rulesets directly since they are coded as dimac instead of ... point files
@@ -22,8 +28,8 @@ sudokus_9x9_cnf = get_sudoku_from_dots("sudoku_resources/9x9.txt", 9)
 sudokus_16x16_cnf = get_sudoku_from_dots("sudoku_resources/16x16.txt", 16)
 
 # Collect all sudokus and rules in one big list so we can iterate over it in 1 experiment instead of repeating code
-sudokus_and_rules_collection =[(sudokus_4x4_cnf, sudoku_rules_4x4_cnf), (sudokus_9x9_cnf, sudoku_rules_9x9_cnf), (sudokus_16x16_cnf, sudoku_rules_16x16_cnf)]
-
+sudokus_and_rules_collection =[(sudokus_16x16_cnf, sudoku_rules_16x16_cnf)]
+# ,(sudokus_4x4_cnf, sudoku_rules_4x4_cnf), 
 #Save the result of the 6 runs (2 heuristics x 3 sudoku sizes (x max_sudokus_tested datapoint))
 #So the results will be in the form [[x datapoints], [x datapoints], [x datapoints], [x datapoints], etc.]
 results = {}
@@ -31,11 +37,12 @@ results = {}
 #RUNNING EXPERIMENTS
 # Run though sudoku collections along with their riles
 ind =0
+
 for sudoku_collection, rules in sudokus_and_rules_collection:
     #Test against the 2 heuristic
-    for heuristic in ["moms", "jw", "random"]:
+    for heuristic in [ "jw", "random"]:
         #Save the name of the collection (i.e. sudokus_16x16_cnf) as a string. 
-        python_var_name_as_string = ["4x4", "9x9", "16x16"][ind]
+        python_var_name_as_string = ["16x16"][ind]
         print("Experimenting heuristic: " + heuristic + python_var_name_as_string)
         #Track the resulting time
         times_for_sudokus = []
@@ -55,6 +62,10 @@ for sudoku_collection, rules in sudokus_and_rules_collection:
             if index == max_sudokus_tested:
                 break
         
+        print("\n"+python_var_name_as_string + "_" + heuristic)
+        print(get_best_distribution(times_for_sudokus))
+        print("\n")
+
         #Save to results under appropriate name so we cna find back alter
         results[python_var_name_as_string + "_" + heuristic] = times_for_sudokus
         with open(python_var_name_as_string + "_" + heuristic+".txt", "wb") as fp:   #Pickling
