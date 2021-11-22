@@ -229,7 +229,8 @@ def has_empty_clause(cnf_formula, log_level):
 def print_assignments_as_sudoku(assignments, flush=True, header="Finished Sudoku", size=16):
     
     if(flush):
-        print ("\033[A                             \033[A")
+        for i in range(size):
+            print ("\033[A                             \033[A")
 
     #Only keep positives
     assignments = [item for item in assignments if item >= 0]

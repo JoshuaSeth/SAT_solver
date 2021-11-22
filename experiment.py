@@ -28,7 +28,8 @@ sudokus_4x4_cnf = get_sudoku_from_dots("sudoku_resources/4x4.txt", 4)
 sudokus_9x9_cnf = get_sudoku_from_dots("sudoku_resources/9x9.txt", 9)
 sudokus_16x16_cnf = get_sudoku_from_dots("sudoku_resources/16x16.txt", 16)
 
-print_assignments_as_sudoku(flatten(sudokus_16x16_cnf[0]), size=16)
+print_assignments_as_sudoku(flatten(sudokus_16x16_cnf[0]), size=16, flush=False)
+print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 
 # Collect all sudokus and rules in one big list so we can iterate over it in 1 experiment instead of repeating code
 sudokus_and_rules_collection =[ (sudokus_16x16_cnf, sudoku_rules_16x16_cnf)]
