@@ -52,7 +52,7 @@ with open("16x16_gen_rules.txt", 'w') as rules:
                 for var_2 in range(1, 17):
                     var_2 = str(var_2)
                     if len(str(var_2))==1:
-                        var_2 = var.rjust(2, '9')
+                        var_2 = var_2.rjust(2, '9')
                     if var != var_2:
                         var_2_str =  "-"+ row +col +  var_2
                         var_1_str =  "-"+ row +col +  var
@@ -179,4 +179,6 @@ with open("16x16_gen_rules.txt", 'w') as rules:
                             str_2 = "-"+row_2_str+col_2_str+var_str
 
                             rules.write(str_1 + " " +str_2 + " 0\n")
+    
+
 
