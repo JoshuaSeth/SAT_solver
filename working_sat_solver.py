@@ -105,6 +105,19 @@ def jw_var_picker(cnf_formula):
     counts = get_jw_counted_terms(cnf_formula)
     return max(counts, key = counts.get)
 
+def pick_literal_in_shortest_all_positive_clause(cnf_formula):
+    clause_length = 9999999999 # initial length to compare to
+    winner = 0
+    for clauses in cnf_formula:
+        negative_count = len(list(filter(lambda x: (x<0), clauses))) # iterate over all clauses and count how many negative literals are in them
+        if negative_count == False and len(clauses) < clause_length:
+            winner = clauses[0]
+            clause_length = len(clauses) # keep updating clause length to always select from shortest clause
+    if not winner:
+        winner = cnf_formula[0][0] # if no clauses with all positive literals, return first element of the formula
+        return winner
+    return winner
+
 def get_rand_var(cnf_formula):
     """Internal, use get_varaible_by_heuristic instead. Returns random variable
     without regard for heuristic or if it was already checked for"""
@@ -233,6 +246,8 @@ def sat_experiment_connector(cnf_formula, heuristic_name):
         heuristic = jw_var_picker
     if heuristic_name == "moms":
         heuristic = MOMS_heuristic
+    if heuristic_name == 'shortest_pos':
+        heuristic = pick_literal_in_shortest_all_positive_clause
     else: heuristic = get_rand_var
     start_time = datetime.datetime.now()
     try:
