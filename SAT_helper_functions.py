@@ -230,7 +230,7 @@ def print_assignments_as_sudoku(assignments, flush=True, header="Finished Sudoku
     
     if(flush):
         for i in range(size+2):
-            print ("\033[A                                              \033[A")
+            print ("\033[A                                                 \033[A")
 
     #Only keep positives
     assignments = [item for item in assignments if item >= 0]
@@ -261,7 +261,11 @@ def print_assignments_as_sudoku(assignments, flush=True, header="Finished Sudoku
             index_x=int(index_x)-1
             index_y=int(index_y)-1
 
-        grid[index_x][index_y]= value
+        try:
+            grid[index_x][index_y]= value
+        except Exception as e:
+            print(index_x, index_y, value)
+            print("\n", e)
 
 
     df = pd.DataFrame.from_records(grid)

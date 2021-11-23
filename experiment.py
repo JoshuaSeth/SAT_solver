@@ -54,7 +54,11 @@ for sudoku_collection, rules in sudokus_and_rules_collection:
         index=0
         #Go through sudoku in sudko collection
         for i in tqdm(range(max_sudokus_tested)):
-            sudoku = [[919191]] #sudoku_collection[i]
+            sudoku = read_cnf_from_dimac("easy_sudoku_dimac.txt")
+            print(sudoku)
+            print_assignments_as_sudoku(flatten(sudoku), size=16, header="Extreme easy sudoku.txt")
+            print_assignments_as_sudoku(flatten(sudoku), size=16, header="Extreme easy sudoku.txt", flush=False)
+
             sudoku_and_rules_as_cnf = []
             sudoku_and_rules_as_cnf.extend(sudoku)
             sudoku_and_rules_as_cnf.extend(copy.deepcopy(rules))
