@@ -174,6 +174,7 @@ def backtracking(formula, assignment, heuristic):
     formula, unit_assignment = get_and_remove_unit_clauses(formula)
 
     assignment = assignment + unit_assignment
+    print_assignments_as_sudoku(assignment, header="CURRENT RESULT", flush=True)
     if formula == -1:
         return []
     if not formula:
@@ -183,7 +184,7 @@ def backtracking(formula, assignment, heuristic):
 
     variable = heuristic(formula)
 
-    print_assignments_as_sudoku(assignment, header="CURRENT RESULT")
+    
     solution = backtracking(remove_var_from_cnf(formula, variable), assignment + [variable], heuristic)
     if not solution:
         solution = backtracking(remove_var_from_cnf(formula, -variable), assignment + [-variable], heuristic)

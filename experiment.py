@@ -42,7 +42,7 @@ ind =0
 
 for sudoku_collection, rules in sudokus_and_rules_collection:
     #Test against the 2 heuristic
-    for heuristic in [   "random", "moms", "jw"]:
+    for heuristic in [ "moms","random", "jw"]:
         #Save the name of the collection (i.e. sudokus_16x16_cnf) as a string. 
         python_var_name_as_string = ["16x16"][ind]
         print("Experimenting heuristic: " + heuristic + python_var_name_as_string)
@@ -51,9 +51,9 @@ for sudoku_collection, rules in sudokus_and_rules_collection:
         index=0
         #Go through sudoku in sudko collection
         for i in tqdm(range(max_sudokus_tested)):
-            sudoku = read_cnf_from_dimac("easy_sudoku_dimac.txt")
+            sudoku = sudoku_collection[i] #read_cnf_from_dimac("easy_sudoku_dimac.txt")
             print_assignments_as_sudoku(flatten(sudoku), size=16, header="Easy starting sudoku", flush=False )
-            for i in range(17):
+            for i in range(10):
                 print("\n")
 
             sudoku_and_rules_as_cnf = []
@@ -68,17 +68,16 @@ for sudoku_collection, rules in sudokus_and_rules_collection:
             if index == max_sudokus_tested:
                 break
         
-        print("\n"+python_var_name_as_string + "_" + heuristic)
+        # print("\n"+python_var_name_as_string + "_" + heuristic)
         # print(get_best_distribution(times_for_sudokus))
         print("\n")
 
         #Save to results under appropriate name so we cna find back alter
         results[python_var_name_as_string + "_" + heuristic] = times_for_sudokus
-        with open(python_var_name_as_string + "_" + heuristic+".txt", "wb") as fp:   #Pickling
-            pickle.dump(times_for_sudokus, fp)
+        # with open(python_var_name_as_string + "_" + heuristic+".txt", "wb") as fp:   #Pickling
+        #     pickle.dump(times_for_sudokus, fp)
     ind+=1
 
-print(results)
 
 # #T-TESTS
 # #Since we now have a collection with results we might as well do the t-tests immediately

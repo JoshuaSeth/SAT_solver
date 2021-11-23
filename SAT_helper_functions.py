@@ -5,6 +5,7 @@ import numpy as np
 import random
 import math
 import pandas as pd
+import sys
 
 def read_cnf_from_dimac(filename):
     """Reads dimacs form a filename to a cnf formula in the form of
@@ -227,10 +228,6 @@ def has_empty_clause(cnf_formula, log_level):
     return False
 
 def print_assignments_as_sudoku(assignments, flush=False, header="Finished Sudoku", size=16):
-    if(flush):
-        for i in range(size+2):
-            print ("\033[A                                                 \033[A")
-
     #Only keep positives
     assignments = [item for item in assignments if item >= 0]
     #Sort from low to high
@@ -240,7 +237,9 @@ def print_assignments_as_sudoku(assignments, flush=False, header="Finished Sudok
     index_modifier= len(str(size))-1 #will be 0 normally and 1 for 16
     for i in range(size):
         grid.append([0]*size)
+    index= 0
     for item in assignments:
+        index+=1
         index_x = int(str(item)[0])-1
         index_y=int(str(item)[1])-1
         value = int(str(item)[2])
@@ -259,8 +258,13 @@ def print_assignments_as_sudoku(assignments, flush=False, header="Finished Sudok
             if value[0]=="9":
                 value = value[1]
             value = int(value)
+            
             index_x=int(index_x)-1
             index_y=int(index_y)-1
+        
+        #Print the current assignment we are working on
+        if index == len(assignments):
+            value = "["+str(value)+"]"
 
         try:
             grid[index_x][index_y]= value
@@ -270,9 +274,35 @@ def print_assignments_as_sudoku(assignments, flush=False, header="Finished Sudok
 
 
     df = pd.DataFrame.from_records(grid)
+    if(flush):
+        for i in range(size+4):
+            print ("\033[A                                                 \033[A")
     print("\n"+header)
     print(df.to_string(index=False, header=False))
 
+    print("Filling in sudoku progress:")
+    update_progress(float(len(assignments))/10)
+
+def update_progress(progress):
+    barLength = 25.6 # Modify this to change the length of the progress bar
+    status = ""
+    if isinstance(progress, int):
+        progress = float(progress)
+    if isinstance(barLength, float):
+        barLength = int(barLength)
+    if not isinstance(progress, float):
+        progress = 0
+        status = "error: progress var must be float\r\n"
+    if progress < 0:
+        progress = 0
+        status = "Halt...\r\n"
+    if progress >= 1:
+        progress = 1
+        status = "Done...\r\n"
+    block = int(round(barLength*progress))
+    text = "\rPercent: [{0}] {1}% {2}".format( "#"*block + "-"*(barLength-block), progress*100, status)
+    sys.stdout.write(text)
+    sys.stdout.flush()
 
 def sudoku_to_DIMACS(sudoku):
     """Prints set of clauses given a sudoku as a string"""  # code needs to be cleaned up after it is finished
