@@ -54,51 +54,51 @@ with open("16x16_gen_rules.txt", 'w') as rules:
                         var_1_str =  "-"+ row +col +  var
                         rules.write(var_1_str + " " + var_2_str + " 0\n")
     
-    # #Pt 3 every number once per column
-    # for col in range(1, 17):
-    #     for row in range(1, 17):
-    #         row = str(row)
-    #         col = str(col)
-    #         if len(str(row))==1:
-    #             row = row.rjust(2, '9')
-    #         if len(str(col)) == 1:
-    #             col = col.rjust(2, '9')
-    #         for row_2 in range(1, 17):
-    #             row_2 = str(row_2)
-    #             if len(row_2)==1:
-    #                 row_2 = row_2.rjust(2, '9')
-    #             #For all 16 vars
-    #             for var in range(1, 17):
-    #                 var = str(var)
-    #                 if len(str(var))==1:
-    #                     var = var.rjust(2, '9')
-    #                 if row != row_2:
-    #                     row_2_str =  "-"+ row_2 +col+ var
-    #                     row_1_str =  "-" + row + col+ var
-    #                     print(row_1_str + " " + row_2_str + " 0\n")
+    #Pt 3 every number once per column
+    for col in range(1, 17):
+        for row in range(1, 17):
+            row = str(row)
+            col = str(col)
+            if len(str(row))==1:
+                row = row.rjust(2, '9')
+            if len(str(col)) == 1:
+                col = col.rjust(2, '9')
+            for row_2 in range(1, 17):
+                row_2 = str(row_2)
+                if len(row_2)==1:
+                    row_2 = row_2.rjust(2, '9')
+                #For all 16 vars
+                for var in range(1, 17):
+                    var = str(var)
+                    if len(str(var))==1:
+                        var = var.rjust(2, '9')
+                    if row != row_2:
+                        row_2_str =  "-"+ row_2 +col+ var
+                        row_1_str =  "-" + row + col+ var
+                        print(row_1_str + " " + row_2_str + " 0\n")
 
-    #                     rules.write(row_1_str + " " + row_2_str + " 0\n")
+                        rules.write(row_1_str + " " + row_2_str + " 0\n")
 
-    # # Pt 4 every number once per row
-    # for col in range(1, 17):
-    #     for row in range(1, 17):
-    #         row = str(row)
-    #         col = str(col)
-    #         if len(str(row))==1:
-    #             row = row.rjust(2, '9')
-    #         if len(str(col)) == 1:
-    #             col = col.rjust(2, '9')
-    #         for col_2 in range(1, 17):
-    #             col_2 = str(col_2)
-    #             if len(str(col_2))==1:
-    #                 col_2 = col_2.rjust(2, '9')
-    #             #For all 16 vars
-    #             for var in range(1, 17):
-    #                 var = parse_and_pad(var)
-    #                 if col != col_2:
-    #                     col_2_str =  "-"+  row +col_2 + var
-    #                     col_1_str =  "-"+  row +col + var
-    #                     rules.write(col_1_str + " " + col_2_str + " 0\n")
+    # Pt 4 every number once per row
+    for col in range(1, 17):
+        for row in range(1, 17):
+            row = str(row)
+            col = str(col)
+            if len(str(row))==1:
+                row = row.rjust(2, '9')
+            if len(str(col)) == 1:
+                col = col.rjust(2, '9')
+            for col_2 in range(1, 17):
+                col_2 = str(col_2)
+                if len(str(col_2))==1:
+                    col_2 = col_2.rjust(2, '9')
+                #For all 16 vars
+                for var in range(1, 17):
+                    var = parse_and_pad(var)
+                    if col != col_2:
+                        col_2_str =  "-"+  row +col_2 + var
+                        col_1_str =  "-"+  row +col + var
+                        rules.write(col_1_str + " " + col_2_str + " 0\n")
 
 
 

@@ -4,7 +4,7 @@ import pandas as pd
 from Sudoku_rstring_reader import *
 import numpy as np
 from tqdm import tqdm
-from SAT_helper_functions import print_assignments_as_sudoku
+from SAT_helper_functions import has_empty_clause, print_assignments_as_sudoku
 
 
 def read_cnf_from_dimac(filename):
@@ -66,6 +66,8 @@ def get_and_remove_unit_clauses(formula):
     assignment = []
     unit_clauses = [c for c in formula if len(c) == 1]
     while unit_clauses:
+        # if len(unit_clauses) % 10 == 0:
+        # print("unit clauses left", len(unit_clauses))
         unit = unit_clauses[0]
         formula = remove_var_from_cnf(formula, unit[0])
         assignment += [unit[0]]
@@ -168,14 +170,16 @@ def MOMS_heuristic(current_CNF):
     return winning_variable 
 
 def backtracking(formula, assignment, heuristic):
-    formula, pure_assignment = get_and_remove_pure_literal(formula)
+    # formula, pure_assignment = get_and_remove_pure_literal(formula)
     formula, unit_assignment = get_and_remove_unit_clauses(formula)
 
-    assignment = assignment + unit_assignment + pure_assignment
+    assignment = assignment + unit_assignment
     if formula == -1:
         return []
     if not formula:
         return assignment
+    if has_empty_clause(formula, log_level=-1):
+        return []
 
     variable = heuristic(formula)
 
@@ -242,7 +246,7 @@ def sat_experiment_connector(cnf_formula, heuristic_name):
     start_time = datetime.datetime.now()
     try:
         solution = backtracking(cnf_formula, [], heuristic)
-        print_assignments_as_sudoku(solution, header="CURRENT RESULT", flush=False)
+        print_assignments_as_sudoku(solution, header="CURRENT RESULT", flush=True)
 
         if solution:
             end_time = datetime.datetime.now()

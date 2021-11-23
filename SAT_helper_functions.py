@@ -226,8 +226,7 @@ def has_empty_clause(cnf_formula, log_level):
             return True
     return False
 
-def print_assignments_as_sudoku(assignments, flush=True, header="Finished Sudoku", size=16):
-    
+def print_assignments_as_sudoku(assignments, flush=False, header="Finished Sudoku", size=16):
     if(flush):
         for i in range(size+2):
             print ("\033[A                                                 \033[A")
@@ -255,6 +254,8 @@ def print_assignments_as_sudoku(assignments, flush=True, header="Finished Sudoku
             if index_y[0]=="9":
                 index_y = index_y[1]
             value = str(str(item)[4:6])
+            if len(value) == 0:
+                print("ERROR",index_x, index_y, value, item)
             if value[0]=="9":
                 value = value[1]
             value = int(value)
