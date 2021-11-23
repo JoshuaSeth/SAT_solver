@@ -230,6 +230,7 @@ def has_empty_clause(cnf_formula, log_level):
 def print_assignments_as_sudoku(assignments, flush=False, header="Finished Sudoku", size=16):
     #Only keep positives
     assignments = [item for item in assignments if item >= 0]
+    last = assignments[len(assignments)-1]
     #Sort from low to high
     assignments = sorted(assignments)
     #print them left to right
@@ -240,6 +241,9 @@ def print_assignments_as_sudoku(assignments, flush=False, header="Finished Sudok
     index= 0
     for item in assignments:
         index+=1
+        is_last=False
+        if item == last:
+            is_last=True
         index_x = int(str(item)[0])-1
         index_y=int(str(item)[1])-1
         value = int(str(item)[2])
@@ -263,8 +267,8 @@ def print_assignments_as_sudoku(assignments, flush=False, header="Finished Sudok
             index_y=int(index_y)-1
         
         #Print the current assignment we are working on
-        if index == len(assignments):
-            value = "["+str(value)+"]"
+        # if is_last:
+        #     value = "["+str(value)+"]"
 
         try:
             grid[index_x][index_y]= value
@@ -281,7 +285,7 @@ def print_assignments_as_sudoku(assignments, flush=False, header="Finished Sudok
     print(df.to_string(index=False, header=False))
 
     print("Filling in sudoku progress:")
-    update_progress(float(len(assignments))/10)
+    update_progress(float(len(assignments))/256)
 
 def update_progress(progress):
     barLength = 25.6 # Modify this to change the length of the progress bar
