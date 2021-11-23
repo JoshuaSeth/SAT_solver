@@ -230,7 +230,7 @@ def print_assignments_as_sudoku(assignments, flush=True, header="Finished Sudoku
     
     if(flush):
         for i in range(size+2):
-            print ("\033[A                             \033[A")
+            print ("\033[A                                              \033[A")
 
     #Only keep positives
     assignments = [item for item in assignments if item >= 0]

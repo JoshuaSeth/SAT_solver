@@ -112,6 +112,8 @@ def get_rand_var(cnf_formula):
     while len(clause) == 0:
         clause = cnf_formula[random.randint(0, len(cnf_formula) - 1)]
     variable = clause[random.randint(0, len(clause) - 1)]
+    #Return absolutes 90% of time
+    if random.randint(0, 10) > 2: variable = abs(variable)
     return variable
 
 def MOMS_heuristic(current_CNF): 
@@ -240,6 +242,8 @@ def sat_experiment_connector(cnf_formula, heuristic_name):
     start_time = datetime.datetime.now()
     try:
         solution = backtracking(cnf_formula, [], heuristic)
+        print_assignments_as_sudoku(solution, header="CURRENT RESULT", flush=False)
+
         if solution:
             end_time = datetime.datetime.now()
             return "sat", end_time - start_time

@@ -27,6 +27,7 @@ sudoku_rules_16x16_cnf = read_cnf_from_dimac("16x16_gen_rules.txt")
 sudokus_4x4_cnf = get_sudoku_from_dots("sudoku_resources/4x4.txt", 4)
 sudokus_9x9_cnf = get_sudoku_from_dots("sudoku_resources/9x9.txt", 9)
 sudokus_16x16_cnf = get_sudoku_from_dots("sudoku_resources/16x16.txt", 16)
+print(sudokus_16x16_cnf[0])
 
 print_assignments_as_sudoku(flatten(sudokus_16x16_cnf[0]), size=16, header="Starting with:", flush=False)
 print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
@@ -44,7 +45,7 @@ ind =0
 
 for sudoku_collection, rules in sudokus_and_rules_collection:
     #Test against the 2 heuristic
-    for heuristic in ["jw", "random", "moms"]:
+    for heuristic in [ "random", "moms", "jw"]:
         #Save the name of the collection (i.e. sudokus_16x16_cnf) as a string. 
         python_var_name_as_string = ["16x16"][ind]
         print("Experimenting heuristic: " + heuristic + python_var_name_as_string)
@@ -53,7 +54,7 @@ for sudoku_collection, rules in sudokus_and_rules_collection:
         index=0
         #Go through sudoku in sudko collection
         for i in tqdm(range(max_sudokus_tested)):
-            sudoku = sudoku_collection[i]
+            sudoku = [[919191]] #sudoku_collection[i]
             sudoku_and_rules_as_cnf = []
             sudoku_and_rules_as_cnf.extend(sudoku)
             sudoku_and_rules_as_cnf.extend(copy.deepcopy(rules))
