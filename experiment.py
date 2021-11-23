@@ -14,7 +14,7 @@ sys.setrecursionlimit(10**5)
 
 # Experiment variables:
 experiment_log_level = 0 #Can be anything depending on what you want
-max_sudokus_tested = 10 # How many sudoku points we collect per test category (i.e. run 10 sudoku's though the sat solver for 4x4, heuristic 2)
+max_sudokus_tested = 1 # How many sudoku points we collect per test category (i.e. run 10 sudoku's though the sat solver for 4x4, heuristic 2)
 
 #These are the sudoku rules in CNF form (list of lists)
 #We can load the rulesets directly since they are coded as dimac instead of ... point files
@@ -51,7 +51,7 @@ for sudoku_collection, rules in sudokus_and_rules_collection:
         index=0
         #Go through sudoku in sudko collection
         for i in tqdm(range(max_sudokus_tested)):
-            sudoku = sudoku_collection[i] #read_cnf_from_dimac("easy_sudoku_dimac.txt")
+            sudoku = read_cnf_from_dimac("easy_sudoku_dimac.txt")
             print_assignments_as_sudoku(flatten(sudoku), size=16, header="Easy starting sudoku", flush=False )
             for i in range(17):
                 print("\n")
