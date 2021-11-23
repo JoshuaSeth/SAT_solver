@@ -305,8 +305,8 @@ def update_progress(progress):
         status = "Done...\r\n"
     block = int(round(barLength*progress))
     text = "\rPercent: [{0}] {1}% {2}".format( "#"*block + "-"*(barLength-block), progress*100, status)
-    sys.stdout.write(text)
-    sys.stdout.flush()
+    print(text)
+
 
 def sudoku_to_DIMACS(sudoku):
     """Prints set of clauses given a sudoku as a string"""  # code needs to be cleaned up after it is finished
