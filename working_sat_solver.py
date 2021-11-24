@@ -89,6 +89,21 @@ def get_jw_counted_terms(cnf_formula): # ONE sided jw heuristic
                 count_literals[terms] = 2 ** -len(clauses)
     return count_literals
 
+def sudoku_heuristic(cnf_formula):
+    # get longest clause
+    longest = None
+    length = 0
+    for clause in cnf_formula:
+        #Not necessary but speeds up computation if we dont check for all clauses
+        if clause[0]>0:
+            if len(clause) > length:
+                if all(i >= 0 for i in clause):
+                    length = len(clause)
+                    longest = clause
+    #get rand var form this clause
+    var = clause[random.randint(0, len(clause)-1)]
+    return var
+
 def jw_var_picker(cnf_formula): 
     counts = get_jw_counted_terms(cnf_formula)
     return max(counts, key = counts.get)
@@ -106,16 +121,21 @@ def pick_literal_in_shortest_all_positive_clause(cnf_formula):
         return winner
     return winner
 
+def get_rand_var_abs(cnf_formula):
+    """Internal, use get_varaible_by_heuristic instead. Returns random variable
+    without regard for heuristic or if it was already checked for"""
+    # Return a random variable from random clause
+    clause = cnf_formula[random.randint(0, len(cnf_formula) - 1)]
+    variable = clause[random.randint(0, len(clause) - 1)]
+    #Return abs
+    return abs(variable)
+
 def get_rand_var(cnf_formula):
     """Internal, use get_varaible_by_heuristic instead. Returns random variable
     without regard for heuristic or if it was already checked for"""
     # Return a random variable from random clause
-    clause = []
-    while len(clause) == 0:
-        clause = cnf_formula[random.randint(0, len(cnf_formula) - 1)]
+    clause = cnf_formula[random.randint(0, len(cnf_formula) - 1)]
     variable = clause[random.randint(0, len(clause) - 1)]
-    #Return absolutes 90% of time
-    if random.randint(0, 10) > 2: variable = abs(variable)
     return variable
 
 def MOMS_heuristic(current_CNF): 
@@ -169,7 +189,7 @@ def MOMS_heuristic(current_CNF):
 
     return winning_variable 
 
-def backtracking(formula, assignment, heuristic):
+def backtracking(formula, assignment, heuristic, num_decisions, num_backtracks):
     # formula, pure_assignment = get_and_remove_pure_literal(formula)
     formula, unit_assignment = get_and_remove_unit_clauses(formula)
 
@@ -183,12 +203,13 @@ def backtracking(formula, assignment, heuristic):
         return []
 
     variable = heuristic(formula)
-
+    num_decisions +=1 
     
-    solution = backtracking(remove_var_from_cnf(formula, variable), assignment + [variable], heuristic)
+    solution, num_decisions = backtracking(remove_var_from_cnf(formula, variable), assignment + [variable], heuristic, num_decisions, num_backtracks)
     if not solution:
-        solution = backtracking(remove_var_from_cnf(formula, -variable), assignment + [-variable], heuristic)
-    return solution
+        num_backtracks+=1
+        solution, num_decisions = backtracking(remove_var_from_cnf(formula, -variable), assignment + [-variable], heuristic, num_decisions, num_backtracks)
+    return solution, num_decisions, num_backtracks
 
 def main():
     starttime_all_sudokus = datetime.datetime.now()
@@ -237,27 +258,34 @@ def main():
 def sat_experiment_connector(cnf_formula, heuristic_name):
     '''Quick connector function to easily connect the SAT solver with the experiment.py
     Basically the same as main() but now with the formula and heuristic as parameters and with return vars'''
+    num_decisions = 0
+    num_backtracks = 0
     if heuristic_name == "jw":
         heuristic = jw_var_picker
     if heuristic_name == "moms":
         heuristic = MOMS_heuristic
     if heuristic_name == 'shortest_pos':
         heuristic = pick_literal_in_shortest_all_positive_clause
-    else: heuristic = get_rand_var
+    if heuristic_name == 'sdk':
+        heuristic = sudoku_heuristic
+    if heuristic_name == 'random_abs':
+        heuristic = get_rand_var_abs
+    if heuristic_name == 'random':
+        heuristic = get_rand_var
     start_time = datetime.datetime.now()
     try:
-        solution = backtracking(cnf_formula, [], heuristic)
+        solution, num_decisions, num_backtracks = backtracking(cnf_formula, [], heuristic, num_decisions, num_backtracks)
         if solution:
             end_time = datetime.datetime.now()
-            return "sat", end_time - start_time
+            return "sat", end_time - start_time, num_decisions, num_backtracks
         else:
             print('Given formula has no satisfiable configuration')
             end_time = datetime.datetime.now()
-            return "unsat", end_time - start_time
+            return "unsat", end_time - start_time, num_decisions, num_backtracks
     except Exception as e:
         print("SUDOKU LIEP VAST< WSS RECURSION ERROR. \n\n ERROR:", e)
         end_time = datetime.datetime.now()
-        return "recursion exceeded", end_time - start_time
+        return "recursion exceeded", end_time - start_time, num_decisions, num_backtracks
     
 
 if __name__ == '__main__':

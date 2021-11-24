@@ -30,8 +30,8 @@ sudokus_16x16_cnf = get_sudoku_from_dots("sudoku_resources/16x16.txt", 16)
 
 
 # Collect all sudokus and rules in one big list so we can iterate over it in 1 experiment instead of repeating code
-sudokus_and_rules_collection =[ (sudokus_16x16_cnf, sudoku_rules_16x16_cnf)]
-# ,(sudokus_4x4_cnf, sudoku_rules_4x4_cnf), 
+sudokus_and_rules_collection =[(sudokus_4x4_cnf, sudoku_rules_4x4_cnf), (sudokus_9x9_cnf, sudoku_rules_9x9_cnf)]
+# ,, 
 #Save the result of the 6 runs (2 heuristics x 3 sudoku sizes (x max_sudokus_tested datapoint))
 #So the results will be in the form [[x datapoints], [x datapoints], [x datapoints], [x datapoints], etc.]
 results = {}
@@ -42,40 +42,47 @@ ind =0
 
 for sudoku_collection, rules in sudokus_and_rules_collection:
     #Test against the 2 heuristic
-    for heuristic in [ "moms","random", "jw"]:
-        #Save the name of the collection (i.e. sudokus_16x16_cnf) as a string. 
-        python_var_name_as_string = ["16x16"][ind]
-        print("Experimenting heuristic: " + heuristic + python_var_name_as_string)
-        #Track the resulting time
-        times_for_sudokus = []
-        index=0
-        #Go through sudoku in sudko collection
-        for i in tqdm(range(max_sudokus_tested)):
-            sudoku = sudoku_collection[i] #read_cnf_from_dimac("easy_sudoku_dimac.txt")
-            print_assignments_as_sudoku(flatten(sudoku), size=16, header="Easy starting sudoku", flush=False )
-            for i in range(10):
-                print("\n")
+    for heuristic in [ "sdk","shortest_pos","moms","random","random_abs", "jw"]:
+        for metric in ["time","backtracks", "decisions"]:
+            #Save the name of the collection (i.e. sudokus_16x16_cnf) as a string. 
+            python_var_name_as_string = ["4x4", "9x9"][ind]
+            print("Experimenting heuristic: " + heuristic + python_var_name_as_string + metric)
+            #Track the resulting time
+            collected_metric = []
+            index=0
+            #Go through sudoku in sudko collection
+            for i in tqdm(range(max_sudokus_tested)):
+                sudoku = sudoku_collection[i] #read_cnf_from_dimac("easy_sudoku_dimac.txt")
+                print_assignments_as_sudoku(flatten(sudoku), size=16, header="Easy starting sudoku", flush=False )
+                for i in range(10):
+                    print("\n")
 
-            sudoku_and_rules_as_cnf = []
-            sudoku_and_rules_as_cnf.extend(sudoku)
-            sudoku_and_rules_as_cnf.extend(copy.deepcopy(rules))
-            #Attempt to SAT solve
-            sat, time_spent =  sat_experiment_connector(sudoku_and_rules_as_cnf, heuristic_name=heuristic)
-            #Save to sudoku times
-            times_for_sudokus.append(time_spent.total_seconds() * 1000)
-            index+=1
-            #Stop when we have done as many tests as we wanted for the category we are in
-            if index == max_sudokus_tested:
-                break
-        
-        # print("\n"+python_var_name_as_string + "_" + heuristic)
-        # print(get_best_distribution(times_for_sudokus))
-        print("\n")
+                sudoku_and_rules_as_cnf = []
+                sudoku_and_rules_as_cnf.extend(sudoku)
+                sudoku_and_rules_as_cnf.extend(copy.deepcopy(rules))
+                #Attempt to SAT solve
+                sat, time_spent, num_decisions, num_backtracks =  sat_experiment_connector(sudoku_and_rules_as_cnf, heuristic_name=heuristic)
+                #Save to sudoku times
+                if metric == "time":
+                    collected_metric.append(time_spent.total_seconds() * 1000)
+                if metric == "backtracks":
+                    collected_metric.append(num_backtracks)
+                if metric == "decisions":
+                    collected_metric.append(num_decisions)
 
-        #Save to results under appropriate name so we cna find back alter
-        results[python_var_name_as_string + "_" + heuristic] = times_for_sudokus
-        # with open(python_var_name_as_string + "_" + heuristic+".txt", "wb") as fp:   #Pickling
-        #     pickle.dump(times_for_sudokus, fp)
+                index+=1
+                #Stop when we have done as many tests as we wanted for the category we are in
+                if index == max_sudokus_tested:
+                    break
+            
+            print("\n"+python_var_name_as_string + "_" + heuristic + "_" + metric)
+            print(get_best_distribution(collected_metric))
+            print("\n")
+
+            #Save to results under appropriate name so we cna find back alter
+            results[python_var_name_as_string + "_" + heuristic + "_" + metric] = collected_metric
+            with open("new_experiment_results/"+python_var_name_as_string + "_" + heuristic+ "_" + metric+".txt", "wb") as fp:   #Pickling
+                pickle.dump(collected_metric, fp)
     ind+=1
 
 
