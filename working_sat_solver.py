@@ -190,25 +190,27 @@ def MOMS_heuristic(current_CNF):
     return winning_variable 
 
 def backtracking(formula, assignment, heuristic, num_decisions, num_backtracks):
-    # formula, pure_assignment = get_and_remove_pure_literal(formula)
+    formula, pure_assignment = get_and_remove_pure_literal(formula)
     formula, unit_assignment = get_and_remove_unit_clauses(formula)
 
-    assignment = assignment + unit_assignment
-    print_assignments_as_sudoku(assignment, header="CURRENT RESULT", flush=True)
+    assignment = assignment + unit_assignment + pure_assignment
+    # print_assignments_as_sudoku(assignment, header="CURRENT RESULT", flush=True)
     if formula == -1:
-        return []
+        return [], num_decisions, num_backtracks
     if not formula:
-        return assignment
+        return assignment, num_decisions, num_backtracks
     if has_empty_clause(formula, log_level=-1):
-        return []
+        return [], num_decisions, num_backtracks
 
     variable = heuristic(formula)
     num_decisions +=1 
+
     
-    solution, num_decisions = backtracking(remove_var_from_cnf(formula, variable), assignment + [variable], heuristic, num_decisions, num_backtracks)
+    solution, num_decisions, num_backtracks = backtracking(remove_var_from_cnf(formula, variable), assignment + [variable], heuristic, num_decisions, num_backtracks)
     if not solution:
         num_backtracks+=1
-        solution, num_decisions = backtracking(remove_var_from_cnf(formula, -variable), assignment + [-variable], heuristic, num_decisions, num_backtracks)
+        solution, num_decisions, num_backtracks = backtracking(remove_var_from_cnf(formula, -variable), assignment + [-variable], heuristic, num_decisions, num_backtracks)
+    
     return solution, num_decisions, num_backtracks
 
 def main():
@@ -273,20 +275,20 @@ def sat_experiment_connector(cnf_formula, heuristic_name):
     if heuristic_name == 'random':
         heuristic = get_rand_var
     start_time = datetime.datetime.now()
-    try:
-        solution, num_decisions, num_backtracks = backtracking(cnf_formula, [], heuristic, num_decisions, num_backtracks)
-        if solution:
-            end_time = datetime.datetime.now()
-            return "sat", end_time - start_time, num_decisions, num_backtracks
-        else:
-            print('Given formula has no satisfiable configuration')
-            end_time = datetime.datetime.now()
-            return "unsat", end_time - start_time, num_decisions, num_backtracks
-    except Exception as e:
-        print("SUDOKU LIEP VAST< WSS RECURSION ERROR. \n\n ERROR:", e)
+    
+    solution, num_decisions, num_backtracks = backtracking(cnf_formula, [], heuristic, num_decisions, num_backtracks)
+    if solution:
         end_time = datetime.datetime.now()
-        return "recursion exceeded", end_time - start_time, num_decisions, num_backtracks
+        return "sat", end_time - start_time, num_decisions, num_backtracks
+    else:
+        print('Given formula has no satisfiable configuration')
+        end_time = datetime.datetime.now()
+        return "unsat", end_time - start_time, num_decisions, num_backtracks
+    # except Exception as e:
+    #     print("SUDOKU LIEP VAST< WSS RECURSION ERROR. \n\n ERROR:", e)
+    #     end_time = datetime.datetime.now()
+    #     return "recursion exceeded", end_time - start_time, num_decisions, num_backtracks
     
 
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
