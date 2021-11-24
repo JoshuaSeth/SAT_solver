@@ -20,7 +20,7 @@ with open("hexa-2.txt", "r") as sudoku:
                 print(char)
                 string+= parse_and_pad(chars.index(char.upper())+ 1)
                 print(string)
-                write_sdk.write(string + " \n")
+                write_sdk.write(string + " 0\n")
 
 sudoku = read_cnf_from_dimac("easy_sudoku_dimac.txt")
 print_assignments_as_sudoku(flatten(sudoku), size=16, header="Extreme easy sudoku.txt", flush=False)
