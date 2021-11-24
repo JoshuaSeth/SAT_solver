@@ -90,19 +90,15 @@ def get_jw_counted_terms(cnf_formula): # ONE sided jw heuristic
     return count_literals
 
 def sudoku_heuristic(cnf_formula):
-    # get longest clause
     longest = None
     length = 0
     for clause in cnf_formula:
-        #Not necessary but speeds up computation if we dont check for all clauses
         if clause[0]>0:
             if len(clause) > length:
                 if all(i >= 0 for i in clause):
                     length = len(clause)
                     longest = clause
-    #get rand var form this clause
-    var = clause[random.randint(0, len(clause)-1)]
-    return var
+    return longest[random.randint(0, len(longest)-1)]
 
 def jw_var_picker(cnf_formula): 
     counts = get_jw_counted_terms(cnf_formula)
