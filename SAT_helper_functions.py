@@ -138,20 +138,17 @@ def get_rand_var(cnf_formula):
     variable = clause[random.randint(0, len(clause) - 1)]
     return variable
 
-def get_jw_counted_terms(cnf_formula): # 2 sided jw heuristic
+def jw_var_picker(cnf_formula): # 2 sided jw heuristic
     count_literals = {}
     for clauses in cnf_formula:
         for terms in clauses:
             abs(terms)
             if terms in count_literals:
-                count_literals[terms] = 0.2 ** -len(clauses)
+                count_literals[terms] = 2 ** -len(clauses)
             else:
-                count_literals[terms] = 0.2 ** -len(clauses)
-    return count_literals
-
-def jw_var_picker(cnf_formula): 
-    counts = get_jw_counted_terms(cnf_formula)
-    return max(counts, key = counts.get)
+                count_literals[terms] = 2 ** -len(clauses)
+    var = max(count_literals, key = count_literals.get)    
+    return var
 
 def get_variable_by_heuristic(cnf_formula, heuristic, current_variable_assignment):
     if heuristic is "random":
