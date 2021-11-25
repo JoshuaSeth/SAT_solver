@@ -7,6 +7,8 @@ import math
 import pandas as pd
 import sys
 
+from generate_16x16_rule import parse_and_pad
+
 def read_cnf_from_dimac(filename):
     """Reads dimacs form a filename to a cnf formula in the form of
     [[clause1], [clause2], [clause3], etc.].
@@ -416,3 +418,21 @@ def get_sudoku_from_dots(file_path, sudoku_size):
                     cnf_formula.append([int(variable)])
             all_formulas.append(cnf_formula)
         return all_formulas
+
+def hexadecimal_to_9_padded(input, sudoku_size):
+    """Translates hexadecimal to 9 padded""" 
+    num_characters_per_part = len(str(sudoku_size)) #4 = 1, 9= 1, 16 = 2, 100=3
+    new = []
+    for clause in input:        
+        clause = str(clause[0])
+        row = clause[num_characters_per_part-1] 
+        col = clause[num_characters_per_part]
+        val = clause[2*num_characters_per_part]
+        row = parse_and_pad(row)
+        col = parse_and_pad(col)
+        val = parse_and_pad(val)
+        new.append([int(str(row)+str(col)+str(val))])
+    print("old and new")
+    print(input)
+    print(new)
+    return new

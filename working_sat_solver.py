@@ -190,7 +190,7 @@ def backtracking(formula, assignment, heuristic, num_decisions, num_backtracks):
     formula, unit_assignment = get_and_remove_unit_clauses(formula)
 
     assignment = assignment + unit_assignment + pure_assignment
-    # print_assignments_as_sudoku(assignment, header="CURRENT RESULT", flush=True)
+    print_assignments_as_sudoku(assignment, header="CURRENT RESULT", flush=True)
     if formula == -1:
         return [], num_decisions, num_backtracks
     if not formula:
