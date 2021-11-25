@@ -23,8 +23,8 @@ def remove_var_from_cnf(cnf_formula, var):
     for clause in cnf_formula:
         if var in clause:
             continue
-        if -var in clause:
-            new_var = [i for i in clause if i!= -var]
+        if get_negated(var) in clause:
+            new_var = [i for i in clause if i!= get_negated(var)]
             if not new_var:
                 return -1
             new_formula.append(new_var)
@@ -48,14 +48,19 @@ def get_counter(formula):
                 counter[literal] += 1
             else:
                 counter[literal] = 1
-    return counter 
+    return counter
+
+def get_negated(variable):
+    if variable[0]=="-":
+        return variable[1:]
+    else: return "-" + variable
 
 def get_and_remove_pure_literal(formula):
     counter = get_counter(formula)
     assignment = []
     pures = []
     for literal, _ in counter.items():
-        if -literal not in counter:
+        if get_negated(literal) not in counter:
             pures.append(literal)
     for pure in pures:
         formula = remove_var_from_cnf(formula, pure)
@@ -93,9 +98,9 @@ def sudoku_heuristic(cnf_formula):
     longest = None
     length = 0
     for clause in cnf_formula:
-        if clause[0]>0:
+        if not clause[0][0]=="-":
             if len(clause) > length:
-                if all(i >= 0 for i in clause):
+                if all(i[0] != "-" for i in clause):
                     length = len(clause)
                     longest = clause
     return longest[random.randint(0, len(longest)-1)]
@@ -186,11 +191,12 @@ def MOMS_heuristic(current_CNF):
     return winning_variable 
 
 def backtracking(formula, assignment, heuristic, num_decisions, num_backtracks):
-    formula, pure_assignment = get_and_remove_pure_literal(formula)
+    # formula, pure_assignment = get_and_remove_pure_literal(formula)
     formula, unit_assignment = get_and_remove_unit_clauses(formula)
 
-    assignment = assignment + unit_assignment + pure_assignment
-    print_assignments_as_sudoku(assignment, header="CURRENT RESULT", flush=True)
+    assignment = assignment + unit_assignment
+    print_assignments_as_sudoku(assignment, header="CURRENT RESULT", flush=True,hexadecimal=True)
+    # print(assignment)
     if formula == -1:
         return [], num_decisions, num_backtracks
     if not formula:
@@ -205,7 +211,7 @@ def backtracking(formula, assignment, heuristic, num_decisions, num_backtracks):
     solution, num_decisions, num_backtracks = backtracking(remove_var_from_cnf(formula, variable), assignment + [variable], heuristic, num_decisions, num_backtracks)
     if not solution:
         num_backtracks+=1
-        solution, num_decisions, num_backtracks = backtracking(remove_var_from_cnf(formula, -variable), assignment + [-variable], heuristic, num_decisions, num_backtracks)
+        solution, num_decisions, num_backtracks = backtracking(remove_var_from_cnf(formula, get_negated(variable)), assignment + [get_negated(variable)], heuristic, num_decisions, num_backtracks)
     
     return solution, num_decisions, num_backtracks
 

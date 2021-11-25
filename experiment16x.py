@@ -20,14 +20,20 @@ max_sudokus_tested = 10 # How many sudoku points we collect per test category (i
 #We can load the rulesets directly since they are coded as dimac instead of ... point files
 sudoku_rules_4x4_cnf = read_cnf_from_dimac("sudoku_resources/sudoku-rules-4x4.txt") 
 sudoku_rules_9x9_cnf = read_cnf_from_dimac("sudoku_resources/sudoku-rules-9x9.txt") 
-sudoku_rules_16x16_cnf = read_cnf_from_dimac("16x16_gen_rules.txt")
+sudoku_rules_16x16_cnf = read_cnf_from_dimac("sudoku_resources/sudoku-rules-16x16.txt")
+
+sudoku_rules_16x16_cnf= rules_to_hexadecimal(sudoku_rules_16x16_cnf)
+
 # print(sudoku_rules_16x16_cnf)
 
 #Load the sudokus themselves (will be more than 10 so we run max of range 10)
-sudokus_4x4_cnf = get_sudoku_from_dots("sudoku_resources/4x4.txt", 4)
-sudokus_9x9_cnf = get_sudoku_from_dots("sudoku_resources/9x9.txt", 9)
-sudokus_16x16_cnf = get_sudoku_from_dots("sudoku_resources/16x16.txt", 16)
+# sudokus_4x4_cnf = get_sudoku_from_dots("sudoku_resources/4x4.txt", 4)
+# sudokus_9x9_cnf = get_sudoku_from_dots("sudoku_resources/9x9.txt", 9)
+sudokus_16x16_cnf = get_sudoku_from_dots("sudoku_resources/16x16.txt", 9, as_string=True)
 
+test = [[3785]]
+res = rules_to_hexadecimal(test)
+print(test, res)
 
 # Collect all sudokus and rules in one big list so we can iterate over it in 1 experiment instead of repeating code
 sudokus_and_rules_collection =[(sudokus_16x16_cnf, sudoku_rules_16x16_cnf)]
@@ -54,13 +60,14 @@ for sudoku_collection, rules in sudokus_and_rules_collection:
         index=0
         #Go through sudoku in sudko collection
         for i in tqdm(range(max_sudokus_tested)):
-            sudoku = read_cnf_from_dimac("easy_sudoku_dimac.txt")
+            sudoku = sudoku_collection[i] #read_cnf_from_dimac("easy_sudoku_dimac.txt")
             # print(sudoku)
             # sudoku = hexadecimal_to_9_padded(sudoku, 9)
             #Remove 30% random clauses
-            for i in range (180):
-                sudoku.pop(random.randint(0, len(sudoku)-1))
-            print_assignments_as_sudoku(flatten(sudoku))
+            # for i in range (180):
+            #     sudoku.pop(random.randint(0, len(sudoku)-1))
+            print(sudoku)
+            print_assignments_as_sudoku(flatten(sudoku), hexadecimal=True)
 
 
             sudoku_and_rules_as_cnf = []

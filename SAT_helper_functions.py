@@ -226,7 +226,18 @@ def has_empty_clause(cnf_formula, log_level):
             return True
     return False
 
-def print_assignments_as_sudoku(assignments, flush=False, header="Finished Sudoku", size=16):
+def print_assignments_as_sudoku(assignments, flush=False, header="Finished Sudoku", size=16,hexadecimal=False):
+    convert =[]
+    if hexadecimal:
+        for item in assignments:
+
+            if item[0]!="-":
+                normal = parse_and_pad(str(chars.index(item[0]))) + parse_and_pad(str(chars.index(item[1]))) + parse_and_pad(str(chars.index(item[2])))
+            else: normal =item[0]+ parse_and_pad(str(chars.index(item[1]))) + parse_and_pad(str(chars.index(item[2]))) + parse_and_pad(str(chars.index(item[3])))
+
+            convert.append(int(normal))
+        assignments = convert
+        
     #Only keep positives
     assignments = [item for item in assignments if item >= 0]
     last = assignments[len(assignments)-1]
@@ -388,7 +399,30 @@ def choose_var_VSIDS(
 chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ" #these are the digits you will use for conversion back and forth
 charsLen = len(chars)
 
-def get_sudoku_from_dots(file_path, sudoku_size):
+def rules_to_hexadecimal(rules):
+    new_rules = []
+    for clause in rules:
+        new_clause  =[]
+        for term in clause:
+            pos_or_neg = term/abs(term)
+            row_rest = abs(term) % 289
+            row= math.floor(abs(term)/289)
+            col_rest = row_rest % 17
+            col= (row_rest-col_rest)/17
+            var = col_rest
+            # print(row, col, var)
+            row=chars[int(row)]
+            col=chars[int(col)]
+            var=chars[int(var)]
+            value = row+col+var
+            if pos_or_neg <0:
+                value="-"+value
+            new_clause.append(value)
+        new_rules.append(new_clause)
+    return new_rules
+
+
+def get_sudoku_from_dots(file_path, sudoku_size, as_string=False):
     """Returns a list of sudokus from file path. (i.e. list of list of lists)""" 
     with open(file_path, 'r') as sudokus:
         count = 0
@@ -401,21 +435,28 @@ def get_sudoku_from_dots(file_path, sudoku_size):
             for character in line:
                 count+=1
                 if character != "." and character != "\n":
-                    row = math.ceil(count / sudoku_size)
-                    column = str(count - (row - 1) * sudoku_size)
+                    row = math.ceil(count / 16)
+                    column = str(count - (row - 1) * 16)
                     row = str(row)
-                    if row.isalpha():
+                    if row.isalpha() and not as_string:
                         row = chars.index(row)
+                    else: row = chars[int(row)]
                     #Pad the number with 9s if we have 16+ size sudokus
-                    row = row.rjust(num_characters_per_part, '9')
-                    if column.isalpha():
+                    if not as_string:
+                        row = row.rjust(num_characters_per_part, '9')
+                    if column.isalpha()  and not as_string:
                         column = chars.index(column)
-                    column = column.rjust(num_characters_per_part, '9')
-                    if character.isalpha():
+                    else: column = chars[int(column)]
+                    if not as_string:
+                        column = column.rjust(num_characters_per_part, '9')
+                    if character.isalpha()  and not as_string:
                         character = str(chars.index(character))
-                    character = character.rjust(num_characters_per_part, '9')
+                    if not as_string:
+                        character = character.rjust(num_characters_per_part, '9')
                     variable = str(row) + str(column) + str(character)
-                    cnf_formula.append([int(variable)])
+                    if not as_string:
+                        cnf_formula.append([int(variable)])
+                    else: cnf_formula.append([str(variable)])
             all_formulas.append(cnf_formula)
         return all_formulas
 
