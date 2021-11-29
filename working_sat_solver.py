@@ -52,8 +52,11 @@ def get_counter(formula):
 
 def get_negated(variable):
     if variable[0]=="-":
+        # print(variable, variable[1:])
         return variable[1:]
-    else: return "-" + variable
+    else:
+        # print(variable, "-" + variable)
+        return "-" + variable
 
 def get_and_remove_pure_literal(formula):
     counter = get_counter(formula)

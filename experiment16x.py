@@ -24,6 +24,8 @@ sudoku_rules_16x16_cnf = read_cnf_from_dimac("sudoku_resources/sudoku-rules-16x1
 
 sudoku_rules_16x16_cnf= rules_to_hexadecimal(sudoku_rules_16x16_cnf)
 
+print(sudoku_rules_16x16_cnf)
+
 # print(sudoku_rules_16x16_cnf)
 
 #Load the sudokus themselves (will be more than 10 so we run max of range 10)
