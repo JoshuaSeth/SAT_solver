@@ -216,7 +216,8 @@ def assignments_to_DIMAC(solution):
 def main(): # perhaps we can do something here with the input/output file structure?
     cur_dir = os.path.dirname(os.path.realpath(__file__))
     
-    heuristic_name = sys.argv[0]
+    #Read command line arguments given
+    heuristic_name = sys.argv[1]
     print("HEURISTIC: "+heuristic_name)
     if heuristic_name == "jw":
         heuristic = jw_var_picker
@@ -230,7 +231,7 @@ def main(): # perhaps we can do something here with the input/output file struct
         heuristic = get_rand_var_abs
     if heuristic_name == 'random':
         heuristic = get_rand_var
-    else:
+    if heuristic == None:
         print("No heuristic name or invalid heuristic name given. Falling back to JW. Give a heuristic argument as second argument to calling the scipt. Options: \n - jw\n - moms \n - shortest_pos \n - sdk \n - random_abs \n- random")
         heuristic = jw_var_picker
 
