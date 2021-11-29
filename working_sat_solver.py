@@ -1,5 +1,7 @@
 import random
 import datetime
+import sys
+import os
 #from SAT_helper_functions import print_assignments_as_sudoku
 #import pandas as pd
 #from Sudoku_rstring_reader import *
@@ -8,12 +10,15 @@ import datetime
 
 def read_cnf_from_dimac(filename):
     cnf_formula = []
+    text = open(filename, 'r').read()
+    lines = text.split("0")
     # Go through each line in file
-    for line in open(filename):
+    for line in lines:
+        line =line.replace("\n", "").strip()
         # In our case skip lines starting with both p and c if I understand the file structure correctly
-        if not line.startswith("p") and not line.startswith("c"):
+        if not line.startswith("p") and not line.startswith("c") and len(line)>2:
             # gathering clauses as integers for every line in the document, also removes '0's
-            clause = [int(x) for x in line[:-2].split()]
+            clause = [int(x) for x in line.split()]
             cnf_formula.append(clause)
     return cnf_formula
 
@@ -209,11 +214,33 @@ def assignments_to_DIMAC(solution):
         solution_file.writelines(str(assignment) + " " + "0" + "\n" )
 
 def main(): # perhaps we can do something here with the input/output file structure?
-    Heuristic = jw_var_picker
-    cnf_formula = read_cnf_from_dimac('sudoku-rules.txt')
-    test_sudoku = read_cnf_from_dimac("sudoku-example.txt")
+    cur_dir = os.path.dirname(os.path.realpath(__file__))
+    
+    heuristic_name = sys.argv[0]
+    print("HEURISTIC: "+heuristic_name)
+    if heuristic_name == "jw":
+        heuristic = jw_var_picker
+    if heuristic_name == "moms":
+        heuristic = MOMS_heuristic
+    if heuristic_name == 'shortest_pos':
+        heuristic = pick_literal_in_shortest_all_positive_clause
+    if heuristic_name == 'sdk':
+        heuristic = sudoku_heuristic
+    if heuristic_name == 'random_abs':
+        heuristic = get_rand_var_abs
+    if heuristic_name == 'random':
+        heuristic = get_rand_var
+    else:
+        print("No heuristic name or invalid heuristic name given. Falling back to JW. Give a heuristic argument as second argument to calling the scipt. Options: \n - jw\n - moms \n - shortest_pos \n - sdk \n - random_abs \n- random")
+        heuristic = jw_var_picker
+
+    cnf_formula = read_cnf_from_dimac(cur_dir+ '/sudoku-rules.txt')
+    test_sudoku = read_cnf_from_dimac(cur_dir+  '/sudoku-example.txt')
     cnf_formula.extend(test_sudoku)
-    all_assignments, num_decisions, num_backtracks = backtracking(cnf_formula, [], Heuristic, 0, 0)
+
+
+    #Actual running of the thing
+    all_assignments, num_decisions, num_backtracks = backtracking(cnf_formula, [], heuristic, 0, 0)
     if all_assignments:
         print('SAT' + "\n" + "Number of backtrack steps taken: " + str(num_backtracks))
         assignments_to_DIMAC(all_assignments) # printing the solution assignments to a txt file in dimacs format
