@@ -216,8 +216,20 @@ def assignments_to_DIMAC(solution):
 def main(): # perhaps we can do something here with the input/output file structure?
     cur_dir = os.path.dirname(os.path.realpath(__file__))
     
+    input_file = sys.argv[1] if len(sys.argv)>1 else ""
+    if input_file != "":
+        try:
+            cnf_formula = read_cnf_from_dimac(input_file)
+        except Exception as e: print("\n Something went wrong opening this DIMACS file: \n\n", e)
+    else:
+        print("No input file given. Falling back to example rules and example sudoku. Give the input file as filepath as first argument when calling the script.")
+        cnf_formula = read_cnf_from_dimac(cur_dir+ '/sudoku-rules.txt')
+        test_sudoku = read_cnf_from_dimac(cur_dir+  '/sudoku-example.txt')
+        cnf_formula.extend(test_sudoku)
+
     #Read command line arguments given
-    heuristic_name = sys.argv[1]
+
+    heuristic_name = sys.argv[2] if len(sys.argv)>2 else "no heuristic arg given."
     print("HEURISTIC: "+heuristic_name)
     if heuristic_name == "jw":
         heuristic = jw_var_picker
@@ -231,13 +243,11 @@ def main(): # perhaps we can do something here with the input/output file struct
         heuristic = get_rand_var_abs
     if heuristic_name == 'random':
         heuristic = get_rand_var
-    if heuristic == None:
+    if heuristic_name == "no heuristic arg given.":
         print("No heuristic name or invalid heuristic name given. Falling back to JW. Give a heuristic argument as second argument to calling the scipt. Options: \n - jw\n - moms \n - shortest_pos \n - sdk \n - random_abs \n- random")
         heuristic = jw_var_picker
 
-    cnf_formula = read_cnf_from_dimac(cur_dir+ '/sudoku-rules.txt')
-    test_sudoku = read_cnf_from_dimac(cur_dir+  '/sudoku-example.txt')
-    cnf_formula.extend(test_sudoku)
+
 
 
     #Actual running of the thing
