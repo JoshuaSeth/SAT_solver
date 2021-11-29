@@ -222,7 +222,9 @@ def main(): # perhaps we can do something here with the input/output file struct
     if input_file != "":
         try:
             cnf_formula = read_cnf_from_dimac(input_file)
-        except Exception as e: print("\n Something went wrong opening this DIMACS file: {0}\n\n".format(input_file), e)
+        except Exception as e: 
+            print("\n Something went wrong opening this DIMACS file: {0} \n\n".format(input_file), e)
+            sys.exit()
     else:
         print("No input file given. Falling back to example rules and example sudoku. Give the input file as filepath as first argument when calling the script.")
         cnf_formula = read_cnf_from_dimac(cur_dir+ '/sudoku-rules.txt')
