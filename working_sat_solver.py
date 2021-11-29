@@ -1,11 +1,10 @@
 import random
 import datetime
-import pandas as pd
-from Sudoku_rstring_reader import *
-import numpy as np
-from tqdm import tqdm
-from SAT_helper_functions import has_empty_clause, print_assignments_as_sudoku
-
+#from SAT_helper_functions import print_assignments_as_sudoku
+#import pandas as pd
+#from Sudoku_rstring_reader import *
+#import numpy as np
+#from tqdm import tqdm
 
 def read_cnf_from_dimac(filename):
     cnf_formula = []
@@ -20,19 +19,19 @@ def read_cnf_from_dimac(filename):
 
 def remove_var_from_cnf(cnf_formula, var):
     new_formula = []
-    for clause in cnf_formula:
-        if var in clause:
+    for clauses in cnf_formula:
+        if var in clauses:
             continue
-        if -var in clause:
-            new_var = [i for i in clause if i!= -var]
+        if -var in clauses:
+            new_var = [i for i in clauses if i != -var]
             if not new_var:
                 return -1
             new_formula.append(new_var)
         else:
-            new_formula.append(clause)
+            new_formula.append(clauses)
     return new_formula
 
-def get_tautologies(cnf_formula): # niet nodig 
+def get_tautologies(cnf_formula): # unused, expensive and no return of investment
     tautologies = []
     for clause in cnf_formula:
         for term in clause:
@@ -40,46 +39,45 @@ def get_tautologies(cnf_formula): # niet nodig
                 tautologies.append(clause) 
     return tautologies 
 
-def get_counter(formula):
-    counter = {}
-    for clause in formula:
-        for literal in clause:
-            if literal in counter:
-                counter[literal] += 1
+def count_all_literals(cnf_formula): # counting all the literals, used for the pure literal removal
+    literal_count = {}
+    for clauses in cnf_formula:
+        for literal in clauses:
+            if literal in literal_count:
+                literal_count[literal] += 1
             else:
-                counter[literal] = 1
-    return counter 
+                literal_count[literal] = 1
+    return literal_count 
 
-def get_and_remove_pure_literal(formula):
-    counter = get_counter(formula)
-    assignment = []
-    pures = []
-    for literal, _ in counter.items():
-        if -literal not in counter:
-            pures.append(literal)
-    for pure in pures:
-        formula = remove_var_from_cnf(formula, pure)
-    assignment += pures
-    return formula, assignment
+def get_and_remove_pure_literal(cnf_formula): # removing all pure literals, 
+    literal_count = count_all_literals(cnf_formula)
+    assignments = []
+    pure_literals = []
+    for literal, _ in literal_count.items():
+        if -literal not in literal_count:
+            pure_literals.append(literal)
+    for pure in pure_literals:
+        cnf_formula = remove_var_from_cnf(cnf_formula, pure)
+    assignments += pure_literals
+    return cnf_formula, assignments
 
-def get_and_remove_unit_clauses(formula):
-    assignment = []
-    unit_clauses = [c for c in formula if len(c) == 1]
+def get_and_remove_unit_clauses(cnf_formula):
+    assignments = []
+    unit_clauses = [clause for clause in cnf_formula if len(clause) == 1]
     while unit_clauses:
         # if len(unit_clauses) % 10 == 0:
         # print("unit clauses left", len(unit_clauses))
-        unit = unit_clauses[0]
-        formula = remove_var_from_cnf(formula, unit[0])
-        assignment += [unit[0]]
-        if formula == -1:
+        unit_clause = unit_clauses[0]
+        cnf_formula = remove_var_from_cnf(cnf_formula, unit_clause[0])
+        assignments += [unit_clause[0]]
+        if cnf_formula == -1:
             return -1, []
-        if not formula:
-            return formula, assignment
-        unit_clauses = [c for c in formula if len(c) == 1]
-        
-    return formula, assignment
+        if not cnf_formula:
+            return cnf_formula, assignments
+        unit_clauses = [clause for clause in cnf_formula if len(clause) == 1]
+    return cnf_formula, assignments
 
-def get_jw_counted_terms(cnf_formula): # ONE sided jw heuristic
+def jw_var_picker(cnf_formula): # ONE sided jw heuristic
     count_literals = {}
     for clauses in cnf_formula: 
         for terms in clauses:
@@ -87,7 +85,7 @@ def get_jw_counted_terms(cnf_formula): # ONE sided jw heuristic
                 count_literals[terms] += 2 ** -len(clauses)
             else:
                 count_literals[terms] = 2 ** -len(clauses)
-    return count_literals
+    return max(count_literals, key = count_literals.get)
 
 def sudoku_heuristic(cnf_formula):
     longest = None
@@ -100,16 +98,12 @@ def sudoku_heuristic(cnf_formula):
                     longest = clause
     return longest[random.randint(0, len(longest)-1)]
 
-def jw_var_picker(cnf_formula): 
-    counts = get_jw_counted_terms(cnf_formula)
-    return max(counts, key = counts.get)
-
 def pick_literal_in_shortest_all_positive_clause(cnf_formula):
     clause_length = 9999999999 # initial length to compare to
     winner = 0
     for clauses in cnf_formula:
         negative_count = len(list(filter(lambda x: (x<0), clauses))) # iterate over all clauses and count how many negative literals are in them
-        if negative_count == False and len(clauses) < clause_length:
+        if negative_count == False and len(clauses) < clause_length: # if no negative literals and the length of the clause is less compared to the previous one
             winner = clauses[0]
             clause_length = len(clauses) # keep updating clause length to always select from shortest clause
     if not winner:
@@ -117,13 +111,9 @@ def pick_literal_in_shortest_all_positive_clause(cnf_formula):
         return winner
     return winner
 
-def get_rand_var_abs(cnf_formula):
-    """Internal, use get_varaible_by_heuristic instead. Returns random variable
-    without regard for heuristic or if it was already checked for"""
-    # Return a random variable from random clause
+def get_rand_var_abs(cnf_formula): # Return a random variable from random clause
     clause = cnf_formula[random.randint(0, len(cnf_formula) - 1)]
     variable = clause[random.randint(0, len(clause) - 1)]
-    #Return abs
     return abs(variable)
 
 def get_rand_var(cnf_formula):
@@ -185,73 +175,52 @@ def MOMS_heuristic(current_CNF):
 
     return winning_variable 
 
-def backtracking(formula, assignment, heuristic, num_decisions, num_backtracks):
-    formula, pure_assignment = get_and_remove_pure_literal(formula)
-    formula, unit_assignment = get_and_remove_unit_clauses(formula)
+def has_empty_clause(cnf_formula, log_level):
+    """Returns whether the cnf has some empty clause)"""
+    for clause in cnf_formula:
+        if len(clause) is 0:
+            if log_level > 2:
+                print("Found an empty clause: {0}.".format(clause))
+            return True
+    return False
 
-    assignment = assignment + unit_assignment + pure_assignment
-    print_assignments_as_sudoku(assignment, header="CURRENT RESULT", flush=True)
-    if formula == -1:
+def backtracking(cnf_formula, assignment, heuristic, num_decisions, num_backtracks):
+    cnf_formula, pures = get_and_remove_pure_literal(cnf_formula)
+    cnf_formula, unit_clauses = get_and_remove_unit_clauses(cnf_formula)
+
+    assignment = assignment + unit_clauses + pures
+    if cnf_formula == -1:
         return [], num_decisions, num_backtracks
-    if not formula:
+    if not cnf_formula:
         return assignment, num_decisions, num_backtracks
-    if has_empty_clause(formula, log_level=-1):
+    if has_empty_clause(cnf_formula, log_level=-1):
         return [], num_decisions, num_backtracks
+    selected_variable = heuristic(cnf_formula) # selecting a variable to branch on based on the heuristic specified
+    num_decisions +=1 # tracking number of decisions made during the search
+    all_assignments, num_decisions, num_backtracks = backtracking(remove_var_from_cnf(cnf_formula, selected_variable), assignment + [selected_variable], heuristic, num_decisions, num_backtracks)
+    if not all_assignments:
+        num_backtracks += 1 # tracking number of backtracks made during the search
+        all_assignments, num_decisions, num_backtracks = backtracking(remove_var_from_cnf(cnf_formula, -selected_variable), assignment + [-selected_variable], heuristic, num_decisions, num_backtracks)
+    return all_assignments, num_decisions, num_backtracks
 
-    variable = heuristic(formula)
-    num_decisions +=1 
+def assignments_to_DIMAC(solution):
+    solution_file = open('Solution_file_DIMAC.txt', 'w')
+    for assignment in solution:
+        solution_file.writelines(str(assignment) + " " + "0" + "\n" )
 
-    
-    solution, num_decisions, num_backtracks = backtracking(remove_var_from_cnf(formula, variable), assignment + [variable], heuristic, num_decisions, num_backtracks)
-    if not solution:
-        num_backtracks+=1
-        solution, num_decisions, num_backtracks = backtracking(remove_var_from_cnf(formula, -variable), assignment + [-variable], heuristic, num_decisions, num_backtracks)
-    
-    return solution, num_decisions, num_backtracks
-
-def main():
-    starttime_all_sudokus = datetime.datetime.now()
-    heuristic = get_rand_var
-
-    #clauses = read_cnf_from_dimac('sudoku-rules.txt')
-    #example_sudoku = read_cnf_from_dimac('sudoku-example.txt')
-    #clauses.extend(example_sudoku)
-    #n_vars = 999
-
-    individual_solve_times = []
-    for i in range(1,20):
-        starttime_per_sudoku = datetime.datetime.now()
-        # this seems like an excessively slow step, to read from the file over and over  
-        cnf_formula = read_cnf_from_dimac('dimac_files/sudoku-rules.txt') # added the folder to resolve an error
-        cnf_formula.extend(int_sudokus_lol[i])
-        solution = backtracking(cnf_formula, [], heuristic)
-        print('Satisfiable configuration found, printing solution as a sudoku')  
-        print_assignments_as_sudoku(solution)  
-        if solution:
-            endtime_per_sudoku = datetime.datetime.now()
-            time_per_sudoku = endtime_per_sudoku - starttime_per_sudoku
-            individual_solve_times.append(time_per_sudoku)
-        else:
-            print('Given formula has no satisfiable configuration')
-    print(np.mean(individual_solve_times))
-
-
-    #if solution:
-    #solution += [x for x in range(1, n_vars + 1) if x not in solution and -x not in solution]
-    #    solution.sort(key=abs)
-    #    solution = [pos for pos in solution if pos > 0 and pos > 110]
-    #    no_delete = {'0'}
-    #    solution = [no_zero for no_zero in solution if not no_delete & set(str(no_zero))]
-    #    solution = solution 
-    #    print(solution)
-    #    print('SATISFIABLE')
-    #    #print('v ' + ' '.join([str(x) for x in solution]) + ' 0')
-    #else:
-    #    print('s UNSATISFIABLE')
-
-    endtime_all_sudokus = datetime.datetime.now()
-    time_to_solve_all_input_sudokus = endtime_all_sudokus - starttime_all_sudokus
-    print(time_to_solve_all_input_sudokus)
+def main(): # perhaps we can do something here with the input/output file structure?
+    Heuristic = jw_var_picker
+    cnf_formula = read_cnf_from_dimac('sudoku-rules.txt')
+    test_sudoku = read_cnf_from_dimac("sudoku-example.txt")
+    cnf_formula.extend(test_sudoku)
+    all_assignments, num_decisions, num_backtracks = backtracking(cnf_formula, [], Heuristic, 0, 0)
+    if all_assignments:
+        print('SAT' + "\n" + "Number of backtrack steps taken: " + str(num_backtracks))
+        assignments_to_DIMAC(all_assignments) # printing the solution assignments to a txt file in dimacs format
+    else:
+        print('UNSAT')
+        solution_file = open('Solution_file_DIMAC.txt', 'w')
+        solution_file.write(' ') # check if this works
 
 def sat_experiment_connector(cnf_formula, heuristic_name):
     '''Quick connector function to easily connect the SAT solver with the experiment.py
@@ -285,6 +254,5 @@ def sat_experiment_connector(cnf_formula, heuristic_name):
     #     end_time = datetime.datetime.now()
     #     return "recursion exceeded", end_time - start_time, num_decisions, num_backtracks
     
-
-# if __name__ == '__main__':
-#     main()
+if __name__ == '__main__':
+    main()
