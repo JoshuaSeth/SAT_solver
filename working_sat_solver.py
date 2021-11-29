@@ -208,8 +208,9 @@ def backtracking(cnf_formula, assignment, heuristic, num_decisions, num_backtrac
         all_assignments, num_decisions, num_backtracks = backtracking(remove_var_from_cnf(cnf_formula, -selected_variable), assignment + [-selected_variable], heuristic, num_decisions, num_backtracks)
     return all_assignments, num_decisions, num_backtracks
 
-def assignments_to_DIMAC(solution):
-    solution_file = open('Solution_file_DIMAC.txt', 'w')
+def assignments_to_DIMAC(solution, input_file):
+    print("writing variable assignment to: " + input_file+".out")
+    solution_file = open(input_file+".out", 'w')
     for assignment in solution:
         solution_file.writelines(str(assignment) + " " + "0" + "\n" )
 
@@ -217,18 +218,20 @@ def main(): # perhaps we can do something here with the input/output file struct
     cur_dir = os.path.dirname(os.path.realpath(__file__))
     
     input_file = sys.argv[1] if len(sys.argv)>1 else ""
+    print("\nINPUT FILE PATH:" + input_file)
     if input_file != "":
         try:
             cnf_formula = read_cnf_from_dimac(input_file)
-        except Exception as e: print("\n Something went wrong opening this DIMACS file: \n\n", e)
+        except Exception as e: print("\n Something went wrong opening this DIMACS file: {0}\n\n".format(input_file), e)
     else:
         print("No input file given. Falling back to example rules and example sudoku. Give the input file as filepath as first argument when calling the script.")
         cnf_formula = read_cnf_from_dimac(cur_dir+ '/sudoku-rules.txt')
         test_sudoku = read_cnf_from_dimac(cur_dir+  '/sudoku-example.txt')
         cnf_formula.extend(test_sudoku)
+        input_file = cur_dir + "/example.txt"
+
 
     #Read command line arguments given
-
     heuristic_name = sys.argv[2] if len(sys.argv)>2 else "no heuristic arg given."
     print("HEURISTIC: "+heuristic_name)
     if heuristic_name == "jw":
@@ -244,21 +247,18 @@ def main(): # perhaps we can do something here with the input/output file struct
     if heuristic_name == 'random':
         heuristic = get_rand_var
     if heuristic_name == "no heuristic arg given.":
-        print("No heuristic name or invalid heuristic name given. Falling back to JW. Give a heuristic argument as second argument to calling the scipt. Options: \n - jw\n - moms \n - shortest_pos \n - sdk \n - random_abs \n- random")
+        print("No heuristic name or invalid heuristic name given. Falling back to JW. Give a heuristic argument as second argument to calling the scipt. Options: \n - jw\n - moms \n - shortest_pos \n - sdk \n - random_abs \n - random")
         heuristic = jw_var_picker
-
-
 
 
     #Actual running of the thing
     all_assignments, num_decisions, num_backtracks = backtracking(cnf_formula, [], heuristic, 0, 0)
     if all_assignments:
-        print('SAT' + "\n" + "Number of backtrack steps taken: " + str(num_backtracks))
-        assignments_to_DIMAC(all_assignments) # printing the solution assignments to a txt file in dimacs format
+        print('\nSAT' + "\n" + "Number of backtrack steps taken: " + str(num_backtracks))
+        assignments_to_DIMAC(all_assignments, input_file) # printing the solution assignments to a txt file in dimacs format
     else:
         print('UNSAT')
-        solution_file = open('Solution_file_DIMAC.txt', 'w')
-        solution_file.write(' ') # check if this works
+        assignments_to_DIMAC([], input_file)
 
 def sat_experiment_connector(cnf_formula, heuristic_name):
     '''Quick connector function to easily connect the SAT solver with the experiment.py
